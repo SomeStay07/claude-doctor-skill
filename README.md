@@ -27,11 +27,11 @@ Every finding explains **WHY** it matters, with a source link.
 
 ### `/doctor scan` — Diagnose
 
-<img src="assets/demo-scan.svg" alt="doctor scan demo" width="800"/>
+<img src="assets/demo-scan.gif" alt="doctor scan demo" width="800"/>
 
 ### `/doctor fix` — Prescribe + Apply
 
-<img src="assets/demo-fix.svg" alt="doctor fix demo" width="800"/>
+<img src="assets/demo-fix.gif" alt="doctor fix demo" width="800"/>
 
 ---
 
