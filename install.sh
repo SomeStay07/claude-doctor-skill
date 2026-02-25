@@ -11,7 +11,7 @@ NC='\033[0m' # No Color
 
 REPO="https://raw.githubusercontent.com/SomeStay07/claude-doctor-skill/main"
 DIR=".claude/skills/doctor"
-VERSION="1.1.0"
+VERSION="1.2.0"
 
 # Header
 echo ""
