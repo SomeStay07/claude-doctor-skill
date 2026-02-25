@@ -1,44 +1,94 @@
-<p align="center">
-  <img src="assets/header.svg" alt="Doctor — Project Automation Audit for Claude Code" width="800"/>
-</p>
+<div align="center">
 
-<p align="center">
-  <a href="https://docs.anthropic.com/en/docs/claude-code/"><img src="https://img.shields.io/badge/Claude_Code-Skill-7C3AED?style=flat&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xMiAyQzYuNDggMiAyIDYuNDggMiAxMnM0LjQ4IDEwIDEwIDEwIDEwLTQuNDggMTAtMTBTMTcuNTIgMiAxMiAyek0xMiAyMGMtNC40MiAwLTgtMy41OC04LThzMy41OC04IDgtOCA4IDMuNTggOCA4LTMuNTggOC04IDh6Ii8+PC9zdmc+" alt="Claude Code Skill"/></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="MIT License"/></a>
-  <a href="#6-layers-42-checks"><img src="https://img.shields.io/badge/Checks-42-blue.svg" alt="42 Checks"/></a>
-  <a href="#6-layers-42-checks"><img src="https://img.shields.io/badge/Layers-6-orange.svg" alt="6 Layers"/></a>
-  <a href="#multi-stack-support"><img src="https://img.shields.io/badge/Stacks-20+-teal.svg" alt="20+ Stacks"/></a>
-  <a href="#requirements"><img src="https://img.shields.io/badge/Dependencies-Zero-brightgreen.svg" alt="Zero Dependencies"/></a>
-  <a href="https://t.me/codeonvibes"><img src="https://img.shields.io/badge/Telegram-Channel-26A5E4?logo=telegram" alt="Telegram"/></a>
-</p>
+# Doctor
 
-<p align="center">
-  <b>42 automated checks across 6 layers. Security first.</b><br/>
-  For <a href="https://docs.anthropic.com/en/docs/claude-code/">Claude Code</a> CLI.
-</p>
+**42 automated checks across 6 layers. Security first.**
+
+*A Claude Code skill that scans any project and diagnoses automation gaps — missing security checks, broken hooks, absent tests, misconfigured CI. Then prescribes and applies project-specific fixes.*
+
+[![Claude Code](https://img.shields.io/badge/Claude_Code-Skill-7C3AED?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiIGZpbGw9IndoaXRlIi8+PC9zdmc+)](https://docs.anthropic.com/en/docs/claude-code/)
+[![Checks](https://img.shields.io/badge/Checks-42-blue?style=for-the-badge)](https://github.com/SomeStay07/claude-doctor-skill#6-layers-42-checks)
+[![Layers](https://img.shields.io/badge/Layers-6-orange?style=for-the-badge)](https://github.com/SomeStay07/claude-doctor-skill#6-layers-42-checks)
+[![Stacks](https://img.shields.io/badge/Stacks-20+-teal?style=for-the-badge)](https://github.com/SomeStay07/claude-doctor-skill#multi-stack-support)
+[![License: MIT](https://img.shields.io/badge/License-MIT-22C55E?style=for-the-badge)](LICENSE)
+[![Telegram](https://img.shields.io/badge/Telegram-Channel-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/codeonvibes)
+
+[What It Does](#what-it-does) · [6 Layers, 42 Checks](#6-layers-42-checks) · [Installation](#installation) · [Usage](#usage) · [How It Works](#how-it-works) · [Multi-Stack](#multi-stack-support)
+
+```bash
+curl -sSL https://raw.githubusercontent.com/SomeStay07/claude-doctor-skill/main/install.sh | bash
+```
 
 ---
 
+</div>
+
+## The Problem
+
+You set up Claude Code in a new project and start coding. Everything seems fine — until you realize:
+
+- Secrets are committed to git history
+- `.env` files are world-readable (permissions `644`)
+- No pre-commit hooks catch broken code before push
+- No CI runs tests automatically
+- Claude has no memory of past decisions across sessions
+
+You don't know what you don't know. And fixing these gaps manually takes hours of research.
+
 ## What It Does
 
-Doctor scans any project and diagnoses automation gaps: missing security checks, broken hooks, absent tests, misconfigured CI. Then prescribes and applies project-specific fixes.
+**Doctor** is a set of `.md` files that turns [Claude Code](https://docs.anthropic.com/en/docs/claude-code/) into a project automation auditor. Run `/doctor` and get a full health report with severity levels, explanations, and one-click fixes.
+
+> **What's a Claude Code skill?** A skill is a `.md` file in `.claude/skills/` that gives Claude Code specialized behavior for a specific task. No plugins, no API keys — just text files with instructions. [Learn more](https://docs.anthropic.com/en/docs/claude-code/)
 
 Every finding explains **WHY** it matters, with a source link.
 
 ### `/doctor scan` — Diagnose
 
-<img src="assets/demo-scan.gif" alt="doctor scan demo" width="800"/>
+<div align="center">
+<br>
+<img src="assets/demo-scan.gif" alt="doctor scan demo — diagnosing project health" width="800">
+<br>
+<sub>Phase 1-2: Study your project, run 42 checks, score each layer</sub>
+<br><br>
+</div>
 
 ### `/doctor fix` — Prescribe + Apply
 
-<img src="assets/demo-fix.gif" alt="doctor fix demo" width="800"/>
+<div align="center">
+<br>
+<img src="assets/demo-fix.gif" alt="doctor fix demo — applying fixes" width="800">
+<br>
+<sub>Phase 3-4: Severity-tagged findings with one-click fixes, then verification</sub>
+<br><br>
+</div>
 
----
+## At a Glance
+
+- 42 checks across 6 security & automation layers
+- Auto-discovers your stack (20+ languages/frameworks)
+- Every finding has severity + WHY + source link
+- Applies project-specific fixes (not generic templates)
+- Built-in false positive filtering
+- Zero dependencies, zero config — just `.md` files
+- Bilingual: English and Russian
+
+| Feature | Doctor | [memory-skill](https://github.com/SomeStay07/claude-memory-skill) | [code-reviewer](https://github.com/SomeStay07/code-review-agent) |
+|:--------|:------:|:------------:|:---------------:|
+| Total checks | **42** | N/A | N/A |
+| Layers | **6** | 1 | 1 |
+| Auto-discovery (DCI) | **Yes** | Yes | No |
+| Error recovery | **Yes** | No | Yes |
+| Self-check | **Yes** | No | Yes |
+| False positives list | **Yes** | No | Yes |
+| Multi-stack | **20+** | No | TypeScript/React |
+| Security audit | **11 checks** | No | Partial |
+| One-line install | **Yes** | Yes | Yes |
 
 ## 6 Layers, 42 Checks
 
 | Layer | Name | Checks | What It Covers |
-|-------|------|--------|----------------|
+|:------|:-----|:------:|:---------------|
 | 0 | **Security** | 11 | Secrets in git, SAST, .gitignore, .env permissions, Docker security, client-side keys |
 | 1 | **Foundation** | 5 | CLAUDE.md, dependency manifest, build scripts, project structure, dep freshness |
 | 2 | **Quality Gates** | 11 | Linter, PostToolUse/PreToolUse hooks, pre-commit, CI, error handling, types, coverage |
@@ -46,17 +96,15 @@ Every finding explains **WHY** it matters, with a source link.
 | 4 | **Context** | 5 | MCP servers, plugins (context7, episodic-memory), memory files, SessionStart hook |
 | 5 | **DX** | 7 | Skills (/test, /status), hook installer, Dependabot, stop hook, unit & smoke tests |
 
----
+## Installation
 
-## Install
-
-**One line:**
+### Option A: One command (recommended)
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/SomeStay07/claude-doctor-skill/main/install.sh | bash
 ```
 
-**Manual:**
+### Option B: Manual
 
 ```bash
 mkdir -p .claude/skills/doctor/layers
@@ -73,25 +121,26 @@ for f in SECURITY FOUNDATION QUALITY QUALITY-EXTRA INTELLIGENCE CONTEXT DX; do
 done
 ```
 
-**Verify installation:**
+### Verify
 
 ```bash
 ls .claude/skills/doctor/SKILL.md && echo "Doctor installed"
 ```
 
----
+No configuration, API keys, or build step required.
+
+> **Requirements:** [Claude Code](https://docs.anthropic.com/en/docs/claude-code/) CLI installed and a project directory with source code.
 
 ## Usage
 
-| Command | What It Does |
-|---------|-------------|
-| `/doctor` | Full audit — all 6 layers, all 42 checks |
-| `/doctor scan` | Diagnose only (phases 1-2, no file changes) |
-| `/doctor fix` | Prescribe + apply fixes (phases 3-4) |
-| `/doctor layer <N>` | Audit specific layer (0-5) |
-| `/doctor verify` | Health check after fixes (phase 5) |
-
----
+```bash
+# In Claude Code, say:
+/doctor              # Full audit — all 6 layers, all 42 checks
+/doctor scan         # Diagnose only (phases 1-2, no file changes)
+/doctor fix          # Prescribe + apply fixes (phases 3-4)
+/doctor layer 0      # Security audit only
+/doctor verify       # Health check after fixes (phase 5)
+```
 
 ## How It Works
 
@@ -130,17 +179,15 @@ No configuration needed. Works with 20+ stacks out of the box.
 
 - **Error Recovery** — handles missing git, no tests, no Docker, context overflow
 - **Self-Check** — validates findings before output (no inflated severity, no duplicates)
-- **False Positives** — won't flag missing CI in hobby projects, print() in CLI scripts, etc.
+- **False Positives** — won't flag missing CI in hobby projects, `print()` in CLI scripts, etc.
 - **Definition of Done** — audit isn't complete until all layers scored and user asked about fixes
-
----
 
 ## Multi-Stack Support
 
 Doctor adapts to whatever stack it finds:
 
 | Stack | Linter | Formatter | Test Runner | SAST |
-|-------|--------|-----------|-------------|------|
+|:------|:-------|:----------|:------------|:-----|
 | Python | ruff | ruff format | pytest | bandit |
 | Node.js | eslint | prettier | jest/vitest | eslint-plugin-security |
 | TypeScript | eslint + tsc | prettier | jest/vitest | eslint-plugin-security |
@@ -150,65 +197,49 @@ Doctor adapts to whatever stack it finds:
 | Java | checkstyle | google-java-format | JUnit | SpotBugs |
 | PHP | phpstan | php-cs-fixer | PHPUnit | psalm |
 
----
-
-## Comparison
-
-| Feature | Doctor | [memory-skill](https://github.com/SomeStay07/claude-memory-skill) | [code-reviewer](https://github.com/SomeStay07/code-review-agent) |
-|---------|--------|-------------|---------------|
-| Total checks | **42** | N/A | N/A |
-| Layers | **6** | 1 | 1 |
-| Auto-discovery (DCI) | **Yes** | Yes | No |
-| Error recovery | **Yes** | No | Yes |
-| Self-check | **Yes** | No | Yes |
-| False positives list | **Yes** | No | Yes |
-| Multi-stack | **20+** | No | TypeScript/React |
-| Security audit | **11 checks** | No | Partial |
-| Bilingual (EN/RU) | **Yes** | No | Yes |
-| One-line install | **Yes** | Yes | Yes |
-
----
-
-## File Structure
+## Repository Structure
 
 ```
 claude-doctor-skill/
-  SKILL.md           — Main skill file (entry point for Claude Code)
-  CHECKLIST.md       — Index of all 42 checks across 6 layers
-  layers/
-    SECURITY.md      — Layer 0: 11 security checks + incident response
-    FOUNDATION.md    — Layer 1: 5 foundation checks
-    QUALITY.md       — Layer 2: 7 core quality gate checks
-    QUALITY-EXTRA.md — Layer 2: 4 advanced quality checks
-    INTELLIGENCE.md  — Layer 3: 2 agent intelligence checks
-    CONTEXT.md       — Layer 4: 5 context & memory checks
-    DX.md            — Layer 5: 7 developer experience checks
-  assets/
-    logo.svg         — Doctor logo (stethoscope + code brackets)
-    header.svg       — README header banner
-    demo-scan.svg    — Animated demo: /doctor scan
-    demo-fix.svg     — Animated demo: /doctor fix
-    demo.svg         — Static health report preview
-  install.sh         — One-line installer with verification
+├── SKILL.md           — Main skill file (entry point for Claude Code)
+├── CHECKLIST.md       — Index of all 42 checks across 6 layers
+├── layers/
+│   ├── SECURITY.md      — Layer 0: 11 security checks + incident response
+│   ├── FOUNDATION.md    — Layer 1: 5 foundation checks
+│   ├── QUALITY.md       — Layer 2: 7 core quality gate checks
+│   ├── QUALITY-EXTRA.md — Layer 2: 4 advanced quality checks
+│   ├── INTELLIGENCE.md  — Layer 3: 2 agent intelligence checks
+│   ├── CONTEXT.md       — Layer 4: 5 context & memory checks
+│   └── DX.md            — Layer 5: 7 developer experience checks
+├── assets/
+│   ├── logo.svg         — Doctor logo
+│   ├── demo-scan.gif    — Animated demo: /doctor scan
+│   └── demo-fix.gif     — Animated demo: /doctor fix
+├── install.sh         — One-line installer with verification
+└── LICENSE
 ```
 
----
+One skill. No build step. No dependencies. Install and use.
 
-## Requirements
+## Troubleshooting
 
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code/) CLI installed
-- A project directory with source code
+| Issue | Cause | Fix |
+|:------|:------|:----|
+| Skill not triggered | File missing or wrong path | Verify `.claude/skills/doctor/SKILL.md` exists |
+| Audit is too slow | Very large project | Use `/doctor layer <N>` to audit one layer at a time |
+| False positive | Rule doesn't match your setup | Say "this is intentional" — Doctor skips it |
+| No output | Older Claude Code version | Run `claude --version` and update to latest |
 
-No API keys, no dependencies, no build step. Just `.md` files.
+## See Also
 
----
+**[Claude Memory Skill](https://github.com/SomeStay07/claude-memory-skill)** — persistent project memory for Claude Code. Remembers decisions, catches contradictions, cleans up stale context. Pairs well with Doctor: memory skill stores conventions, Doctor enforces them.
+
+**[Code Reviewer Agent](https://github.com/SomeStay07/code-review-agent)** — automated code review with concrete fixes. Reviews your diff like a senior engineer — file, line, before/after. Doctor audits the project setup; Code Reviewer audits the code itself.
 
 ## Author
 
 Made by [@SomeStay07](https://github.com/SomeStay07) · [Telegram Channel](https://t.me/codeonvibes)
 
----
-
 ## License
 
-MIT
+[MIT](LICENSE) — use it, modify it, ship it.
