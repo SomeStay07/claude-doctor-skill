@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="620" viewBox="0 0 820 620">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&amp;display=swap');
+    .term { font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace; font-size: 13px; }
+    .bold { font-weight: 700; }
+    .dim { opacity: 0.6; }
+    .green { fill: #50fa7b; }
+    .yellow { fill: #f1fa8c; }
+    .red { fill: #ff5555; }
+    .cyan { fill: #8be9fd; }
+    .white { fill: #f8f8f2; }
+    .gray { fill: #6272a4; }
+    .orange { fill: #ffb86c; }
+    .purple { fill: #bd93f9; }
+    .pink { fill: #ff79c6; }
+  </style>
+  <!-- Terminal window -->
+  <rect width="820" height="620" rx="10" fill="#282a36"/>
+  <!-- Title bar -->
+  <rect width="820" height="36" rx="10" fill="#21222c"/>
+  <rect y="26" width="820" height="10" fill="#21222c"/>
+  <circle cx="20" cy="18" r="6" fill="#ff5555"/>
+  <circle cx="40" cy="18" r="6" fill="#f1fa8c"/>
+  <circle cx="60" cy="18" r="6" fill="#50fa7b"/>
+  <text x="410" y="22" text-anchor="middle" class="term gray" font-size="12">claude — /doctor</text>
+
+  <!-- Content -->
+  <g transform="translate(20, 56)">
+    <text y="0" class="term purple bold">$ /doctor</text>
+
+    <text y="30" class="term gray dim">Doctor Progress:</text>
+    <text y="48" class="term green">  [x] Phase 1: Study the project</text>
+    <text y="66" class="term green">  [x] Phase 2: Diagnose against checklist</text>
+    <text y="84" class="term green">  [x] Phase 3: Prescribe fix plan</text>
+    <text y="102" class="term gray dim">  [ ] Phase 4: Apply fixes</text>
+    <text y="120" class="term gray dim">  [ ] Phase 5: Verify health</text>
+
+    <text y="156" class="term white bold" font-size="15">HEALTH REPORT</text>
+    <text y="174" class="term white bold">=================</text>
+
+    <text y="204" class="term cyan">  Security:      </text>
+    <text y="204" x="160" class="term green bold">8/11</text>
+    <text y="204" x="210" class="term yellow"> — permissions, CI scan, .gitignore</text>
+
+    <text y="226" class="term cyan">  Foundation:    </text>
+    <text y="226" x="160" class="term green bold">5/5</text>
+
+    <text y="248" class="term cyan">  Quality Gates: </text>
+    <text y="248" x="160" class="term green bold">9/11</text>
+    <text y="248" x="210" class="term yellow"> — pre-push hook, coverage</text>
+
+    <text y="270" class="term cyan">  Intelligence:  </text>
+    <text y="270" x="160" class="term orange bold">1/2</text>
+    <text y="270" x="210" class="term red">  — domain rules</text>
+
+    <text y="292" class="term cyan">  Context:       </text>
+    <text y="292" x="160" class="term green bold">4/5</text>
+    <text y="292" x="210" class="term yellow"> — episodic memory</text>
+
+    <text y="314" class="term cyan">  DX:            </text>
+    <text y="314" x="160" class="term green bold">6/7</text>
+    <text y="314" x="210" class="term red">  — smoke tests</text>
+
+    <text y="350" class="term white bold">Total: </text>
+    <text y="350" x="66" class="term green bold" font-size="15">33/42 (79%)</text>
+    <text y="350" x="225" class="term green bold"> — GOOD</text>
+
+    <text y="390" class="term gray">─── Findings ─────────────────────────────</text>
+
+    <text y="418" class="term orange">  🟠 chmod 600 .env .mcp.json</text>
+    <text y="436" class="term gray dim">     Currently 644 — any user/process can read secrets</text>
+
+    <text y="464" class="term orange">  🟠 Add gitleaks job to CI</text>
+    <text y="482" class="term gray dim">     --no-verify bypasses pre-commit → secret leaks to remote</text>
+
+    <text y="510" class="term yellow">  🟡 Add to .gitignore: *.pem *.key *.p12</text>
+    <text y="528" class="term gray dim">     git add . may accidentally push private keys to history</text>
+  </g>
+</svg>

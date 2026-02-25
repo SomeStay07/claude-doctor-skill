@@ -1,5 +1,13 @@
 # Doctor — Project Automation Audit Skill for Claude Code
 
+[![Claude Code Skill](https://img.shields.io/badge/Claude_Code-Skill-7C3AED?style=flat&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xMiAyQzYuNDggMiAyIDYuNDggMiAxMnM0LjQ4IDEwIDEwIDEwIDEwLTQuNDggMTAtMTBTMTcuNTIgMiAxMiAyek0xMiAyMGMtNC40MiAwLTgtMy41OC04LThzMy41OC04IDgtOCA4IDMuNTggOCA4LTMuNTggOC04IDh6Ii8+PC9zdmc+)](https://docs.anthropic.com/en/docs/claude-code/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![42 Checks](https://img.shields.io/badge/Checks-42-blue.svg)](#6-layers-42-checks)
+[![6 Layers](https://img.shields.io/badge/Layers-6-orange.svg)](#6-layers-42-checks)
+[![20+ Stacks](https://img.shields.io/badge/Stacks-20+-teal.svg)](#multi-stack-support)
+[![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-brightgreen.svg)](#requirements)
+[![Telegram](https://img.shields.io/badge/Telegram-Channel-26A5E4?logo=telegram)](https://t.me/codeonvibes)
+
 > **42 automated checks across 6 layers. Security first.**
 > For [Claude Code](https://docs.anthropic.com/en/docs/claude-code/) CLI.
 
@@ -9,24 +17,15 @@
 
 Doctor scans any project and diagnoses automation gaps: missing security checks, broken hooks, absent tests, misconfigured CI. Then prescribes and applies project-specific fixes.
 
-```
-/doctor
-```
-
-```
-HEALTH REPORT
-=================
-  Security:      8/11 — permissions, CI scan, .gitignore
-  Foundation:    5/5
-  Quality Gates: 9/11 — pre-push hook, coverage
-  Intelligence:  1/2  — domain rules
-  Context:       4/5  — episodic memory
-  DX:            6/7  — smoke tests
-
-Total: 33/42 (79%) — GOOD
-```
-
 Every finding explains **WHY** it matters, with a source link.
+
+### `/doctor scan` — Diagnose
+
+<img src="assets/demo-scan.gif" alt="doctor scan demo" width="800"/>
+
+### `/doctor fix` — Prescribe + Apply
+
+<img src="assets/demo-fix.gif" alt="doctor fix demo" width="800"/>
 
 ---
 
@@ -37,7 +36,7 @@ Every finding explains **WHY** it matters, with a source link.
 | 0 | **Security** | 11 | Secrets in git, SAST, .gitignore, .env permissions, Docker security, client-side keys |
 | 1 | **Foundation** | 5 | CLAUDE.md, dependency manifest, build scripts, project structure, dep freshness |
 | 2 | **Quality Gates** | 11 | Linter, PostToolUse/PreToolUse hooks, pre-commit, CI, error handling, types, coverage |
-| 3 | **Intelligence** | 2 | Agent trio (code-reviewer, debugger, architect), domain rules with paths: |
+| 3 | **Intelligence** | 2 | Agent trio (code-reviewer, debugger, architect), domain rules with paths |
 | 4 | **Context** | 5 | MCP servers, plugins (context7, episodic-memory), memory files, SessionStart hook |
 | 5 | **DX** | 7 | Skills (/test, /status), hook installer, Dependabot, stop hook, unit & smoke tests |
 
