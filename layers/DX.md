@@ -215,7 +215,7 @@ if [ -n "$test_dir" ] && [ -n "$src_dirs" ]; then
 fi
 
 # Coverage ratio (TypeScript/JavaScript):
-if [ -n "$test_dir" ]; then
+if [ -n "$test_dir" ] && [ -n "$src_dirs" ]; then
   ts_files=$(find $src_dirs -name "*.ts" -not -name "*.test.*" -not -name "*.spec.*" -not -name "*.d.ts" 2>/dev/null | wc -l | tr -d ' ')
   if [ "$ts_files" -gt 0 ]; then
     echo "=== TypeScript test coverage ==="
