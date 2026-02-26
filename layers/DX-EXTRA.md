@@ -26,7 +26,7 @@ if [ -f .github/dependabot.yml ] || [ -f .github/dependabot.yaml ]; then
   dependabot_found=true
   echo "  ✅ Dependabot configured"
   # Check ecosystems:
-  ecosystems=$(grep -c "package-ecosystem" .github/dependabot.yml .github/dependabot.yaml 2>/dev/null | tail -1 | cut -d: -f2 | tr -d ' ')
+  ecosystems=$(cat .github/dependabot.yml .github/dependabot.yaml 2>/dev/null | grep -c "package-ecosystem" | tr -d ' ')
   echo "     Ecosystems: $ecosystems"
   # Check schedule:
   schedule=$(grep "interval:" .github/dependabot.yml .github/dependabot.yaml 2>/dev/null | head -1 | sed 's/.*interval:[[:space:]]*//')

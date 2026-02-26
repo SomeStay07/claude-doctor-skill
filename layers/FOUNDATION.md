@@ -24,7 +24,7 @@
 
 # Проверить ключевые разделы (без учёта регистра):
 for section in "quick start|getting started" "architecture|structure" "critical|rules|must follow" "known issues|troubleshoot"; do
-  label=$(echo "$section" | sed 's/|/ \/ /g; s/\b\w/\U&/g')
+  label=$(echo "$section" | sed 's/|/ \/ /g' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)}1')
   grep -qiE "$section" CLAUDE.md 2>/dev/null && echo "✅ Has: $label" || echo "⚠️ Missing section: $label"
 done
 
@@ -199,7 +199,7 @@ fi
 if [[ -f package.json ]]; then
   echo "=== Essential scripts ==="
   for script in test lint format start build; do
-    grep -q "\"$script\"" package.json && echo "  ✅ npm run $script" || echo "  ⚠️ MISSING: npm run $script"
+    grep -qE "\"$script\"\\s*:" package.json && echo "  ✅ npm run $script" || echo "  ⚠️ MISSING: npm run $script"
   done
 fi
 

@@ -1,5 +1,28 @@
 # Changelog
 
+## v2.4.1 — Precision Hotfix (12 fixes)
+
+### 🔴 Critical fixes
+- Extra `done` causing syntax error in TypeScript coverage check (DX.md)
+- `sast_in_ci` subshell variable — `find | while` → `while < <(find)` process substitution (SECURITY.md)
+
+### 🟠 Important fixes
+- `find -name -o` without `\( \)` grouping — `.yml` files silently skipped (SECURITY.md, QUALITY.md, QUALITY-EXTRA.md)
+- `grep -v "test"` too broad — matches `contest`, `attestation` → `--exclude-dir=test` (QUALITY-EXTRA.md)
+- `grep "test"` in package.json false positive → `grep -qE '"test"\s*:'` (FOUNDATION.md)
+- Aggressive `trap cleanup ERR` removed — partial install better than no install (install.sh)
+- Dead `2>/dev/null` on `[ -f ]` removed (SECURITY-EXTRA.md)
+
+### 🟡 Minor fixes
+- `grep -c` multi-file → `cat | grep -c` (DX-EXTRA.md)
+- GNU sed `\b\w\U&` → portable `awk toupper()` for macOS (FOUNDATION.md)
+- `python3 -c "open('$var')"` → `sys.argv[1]` safe pattern (DX.md, QUALITY-EXTRA.md, CONTEXT.md)
+- Missing eslint config formats: `.yml`, `.yaml`, `.ts`, `.mts` (QUALITY.md)
+- Makefile help regex: `[a-z]+` → `[a-zA-Z_-]+` for targets with hyphens
+
+### Updated
+- install.sh: version 2.4.1
+
 ## v2.4.0 — Precision (50 fixes + new detections)
 
 ### 🔴 Critical fixes
