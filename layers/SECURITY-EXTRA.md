@@ -277,7 +277,7 @@ fi
 # Backup scripts:
 backup_script=false
 for f in scripts/backup* backup* scripts/*dump*; do
-  if [ -f "$f" ] 2>/dev/null; then
+  if [ -f "$f" ]; then
     backup_script=true
     echo "  ✅ Backup script: $f"
   fi

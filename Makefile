@@ -12,7 +12,7 @@ FILES = SKILL.md GUARDRAILS.md CHECKLIST.md \
 .PHONY: help check lines lint
 
 help: ## Show available targets
-	@grep -E '^[a-z]+:.*##' $(MAKEFILE_LIST) | sed 's/:.*## /\t/' | column -ts '	'
+	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | sed 's/:.*## /\t/' | column -ts '	'
 
 check: ## Verify all files exist and are non-empty
 	@echo "=== File Check ==="

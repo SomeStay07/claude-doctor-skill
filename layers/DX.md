@@ -127,15 +127,15 @@ if [ -f "$settings" ]; then
     # Find stop hook scripts (search for .sh files referenced in Stop section):
     # Extract command value from JSON (handles $CLAUDE_PROJECT_DIR):
     python3 -c "
-import json
-data = json.load(open('$settings'))
+import json, sys
+data = json.load(open(sys.argv[1]))
 hooks = data.get('hooks', {}).get('Stop', [])
 for h in hooks:
     for hook in h.get('hooks', []):
         cmd = hook.get('command', '')
         if cmd:
             print(cmd)
-" 2>/dev/null | while read -r stop_cmd; do
+" "$settings" 2>/dev/null | while read -r stop_cmd; do
       resolved=$(echo "$stop_cmd" | sed "s|\"\\\$CLAUDE_PROJECT_DIR\"|$PWD|g" | sed "s|\\\$CLAUDE_PROJECT_DIR|$PWD|g" | sed 's|"||g')
       if [ -f "$resolved" ]; then
         echo "     script: $(basename "$resolved")"
@@ -186,7 +186,7 @@ for d in tests test __tests__ spec; do
 done
 
 if [ -n "$test_dir" ]; then
-  test_count=$(find "$test_dir" -name "*.py" -o -name "*.test.*" -o -name "*.spec.*" 2>/dev/null | wc -l | tr -d ' ')
+  test_count=$(find "$test_dir" \( -name "*.py" -o -name "*.test.*" -o -name "*.spec.*" \) 2>/dev/null | wc -l | tr -d ' ')
   echo "  ✅ $test_dir/ ($test_count test files)"
 else
   echo "  ❌ No test directory found"
@@ -226,12 +226,11 @@ if [ -n "$test_dir" ] && [ -n "$src_dirs" ]; then
     ts_missing=0
     while read -r f; do
       base=$(basename "$f" .ts)
-      if ! find . -name "${base}.test.ts" -o -name "${base}.spec.ts" 2>/dev/null | grep -q .; then
+      if ! find . \( -name "${base}.test.ts" -o -name "${base}.spec.ts" \) 2>/dev/null | grep -q .; then
         echo "  ⚠️ MISSING tests: $f"
         ts_missing=$((ts_missing + 1))
       fi
     done < <(find $src_dirs -name "*.ts" -not -name "*.test.*" -not -name "*.spec.*" -not -name "*.d.ts" 2>/dev/null)
-    done
     ts_covered=$((ts_files - ts_missing))
     pct=$((ts_covered * 100 / ts_files))
     echo "  📊 Coverage: $ts_covered/$ts_files modules ($pct%)"

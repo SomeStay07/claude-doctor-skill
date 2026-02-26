@@ -76,7 +76,7 @@ else
   # Generic migrations dir:
   if [ "$migration_found" = false ] && [ -d migrations ]; then
     migration_found=true
-    mig_count=$(find migrations -name "*.sql" -o -name "*.py" -o -name "*.js" 2>/dev/null | wc -l | tr -d ' ')
+    mig_count=$(find migrations \( -name "*.sql" -o -name "*.py" -o -name "*.js" \) 2>/dev/null | wc -l | tr -d ' ')
     echo "  ✅ migrations/ ($mig_count файлов)"
   fi
 

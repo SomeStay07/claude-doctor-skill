@@ -11,7 +11,7 @@ NC='\033[0m' # No Color
 
 REPO="https://raw.githubusercontent.com/SomeStay07/claude-doctor-skill/main"
 DIR=".claude/skills/doctor"
-VERSION="2.4.0"
+VERSION="2.4.1"
 command -v curl &>/dev/null || { echo "❌ Error: curl is required but not installed"; exit 1; }
 
 # Header
@@ -29,8 +29,7 @@ fi
 
 # Create directories
 mkdir -p "$DIR/layers"
-cleanup() { echo "⚠️ Installation failed, cleaning up..."; rm -rf "$DIR"; }
-trap cleanup ERR
+installed_files=0
 
 # Download main files
 echo -e "  Downloading main files..."

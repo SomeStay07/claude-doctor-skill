@@ -290,11 +290,11 @@ if [ ! -f "$settings" ]; then
   echo "  ❌ No .claude/settings.json"
 else
   compact_hook=$(python3 -c "
-import json; data = json.load(open('$settings'))
+import json, sys; data = json.load(open(sys.argv[1]))
 for h in data.get('hooks',{}).get('SessionStart',[]):
     if h.get('matcher')=='compact':
         for hook in h.get('hooks',[]): print(hook.get('command','')[:100])
-" 2>/dev/null)
+" "$settings" 2>/dev/null)
   if [ -n "$compact_hook" ]; then
     echo "  ✅ SessionStart compact хук найден"
     echo "     $compact_hook"
@@ -357,10 +357,10 @@ if [ ! -f "$settings" ]; then
   echo "  ❌ No .claude/settings.json"
 else
   notif_hook=$(python3 -c "
-import json; data = json.load(open('$settings'))
+import json, sys; data = json.load(open(sys.argv[1]))
 for h in data.get('hooks',{}).get('Notification',[]):
     for hook in h.get('hooks',[]): print(hook.get('command','')[:80])
-" 2>/dev/null)
+" "$settings" 2>/dev/null)
   if [ -n "$notif_hook" ]; then
     echo "  ✅ Хук уведомлений найден"
     echo "$notif_hook" | grep -qiE "sound|notify-send|osascript" && echo "  ✅ Системное уведомление"

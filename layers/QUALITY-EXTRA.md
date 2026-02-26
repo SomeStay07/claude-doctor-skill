@@ -172,7 +172,7 @@ if [ -f requirements.txt ] || [ -f pyproject.toml ]; then
   fi
 
   # Check CI for coverage:
-  find .github/workflows -name '*.yml' -o -name '*.yaml' 2>/dev/null | while read -r f; do
+  find .github/workflows \( -name '*.yml' -o -name '*.yaml' \) 2>/dev/null | while read -r f; do
     if grep -qiE 'coverage|pytest-cov|--cov' "$f" 2>/dev/null; then
       echo "  ✅ Coverage in CI: $(basename "$f")"
     fi
@@ -228,10 +228,10 @@ if [ -f requirements.txt ] || [ -f pyproject.toml ]; then
     [ -d "$d" ] && src_dirs="${src_dirs:+$src_dirs }$d"
   done
   if [ -n "$src_dirs" ]; then
-    print_count=$(grep -rn "^\s*print(" --include="*.py" $src_dirs 2>/dev/null | grep -v "#" | grep -v "test" | wc -l | tr -d ' ')
+    print_count=$(grep -rn "^\s*print(" --include="*.py" --exclude-dir=test --exclude-dir=tests --exclude-dir=__pycache__ $src_dirs 2>/dev/null | grep -v "^\s*#" | wc -l | tr -d ' ')
     if [ "$print_count" -gt 5 ]; then
       echo "  🟠 $print_count print() statements in production code"
-      grep -rn "^\s*print(" --include="*.py" $src_dirs 2>/dev/null | grep -v "#" | grep -v "test" | head -5 | while read -r line; do
+      grep -rn "^\s*print(" --include="*.py" --exclude-dir=test --exclude-dir=tests --exclude-dir=__pycache__ $src_dirs 2>/dev/null | grep -v "^\s*#" | head -5 | while read -r line; do
         echo "     $line"
       done
       echo "     → Замени на logging.info()/logging.debug()"
@@ -309,8 +309,8 @@ if [ ! -f "$settings" ]; then
 else
   # Check for PreToolUse hooks:
   pre_hooks=$(python3 -c "
-import json
-data = json.load(open('$settings'))
+import json, sys
+data = json.load(open(sys.argv[1]))
 hooks = data.get('hooks', {}).get('PreToolUse', [])
 for h in hooks:
     matcher = h.get('matcher', '(any)')
@@ -318,7 +318,7 @@ for h in hooks:
         cmd = hook.get('command', '')
         cmd_short = cmd.split('/')[-1] if '/' in cmd else cmd[:60]
         print(f'  📋 matcher={matcher} → {cmd_short}')
-" 2>/dev/null)
+" "$settings" 2>/dev/null)
 
   if [ -n "$pre_hooks" ]; then
     echo "$pre_hooks"

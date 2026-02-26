@@ -108,12 +108,12 @@ fi
 
 # Check CI for SAST:
 sast_in_ci=false
-find .github/workflows -name '*.yml' -o -name '*.yaml' 2>/dev/null | while read -r f; do
+while read -r f; do
   if grep -qiE 'bandit|semgrep|snyk|codeql|gosec|trivy|grype' "$f" 2>/dev/null; then
     sast_in_ci=true
     echo "  ✅ SAST in CI: $(basename "$f")"
   fi
-done
+done < <(find .github/workflows \( -name '*.yml' -o -name '*.yaml' \) 2>/dev/null)
 
 # Check pre-commit for SAST:
 if [ -f .pre-commit-config.yaml ]; then

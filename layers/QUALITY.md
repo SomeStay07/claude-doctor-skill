@@ -40,7 +40,7 @@ fi
 
 # Node.js?
 if [ -f package.json ]; then
-  if [ -f .eslintrc ] || [ -f .eslintrc.js ] || [ -f .eslintrc.json ] || [ -f eslint.config.js ] || [ -f eslint.config.mjs ] || [ -f eslint.config.cjs ]; then
+  if [ -f .eslintrc ] || [ -f .eslintrc.js ] || [ -f .eslintrc.json ] || [ -f .eslintrc.yml ] || [ -f .eslintrc.yaml ] || [ -f eslint.config.js ] || [ -f eslint.config.mjs ] || [ -f eslint.config.cjs ] || [ -f eslint.config.ts ] || [ -f eslint.config.mts ]; then
     echo "  ✅ eslint config"
   elif [ -f biome.json ] || [ -f biome.jsonc ]; then
     echo "  ✅ biome config"
@@ -253,7 +253,7 @@ while read -r f; do
   echo "  ✅ $(basename "$f")"
   grep -q "needs:" "$f" 2>/dev/null && echo "     stages: ✅" || echo "     stages: ⚠️ no 'needs:' (lint should be first)"
   grep -rqE 'fake|dummy|placeholder' "$f" 2>/dev/null && echo "     dummy env: ✅"
-done < <(find .github/workflows -name '*.yml' -o -name '*.yaml' 2>/dev/null)
+done < <(find .github/workflows \( -name '*.yml' -o -name '*.yaml' \) 2>/dev/null)
 [ -f .gitlab-ci.yml ] && { ci_found=true; echo "  ✅ .gitlab-ci.yml"; }
 [ "$ci_found" = false ] && echo "  🔵 No CI workflow (опционально для соло-проектов)"
 ```
