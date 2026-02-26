@@ -285,29 +285,32 @@ fi
 
 ```bash
 echo "=== SessionStart compact хук ==="
-settings=""
-for sf in .claude/settings.local.json .claude/settings.json; do [ -f "$sf" ] && settings="$sf" && break; done
-if [ -z "$settings" ]; then
-  echo "  ❌ No .claude/settings.json"
-else
-  compact_hook=$(python3 -c "
+compact_hook=""
+for sf in .claude/settings.local.json .claude/settings.json; do
+  [ -f "$sf" ] || continue
+  found=$(python3 -c "
 import json, sys; data = json.load(open(sys.argv[1]))
 for h in data.get('hooks',{}).get('SessionStart',[]):
     if h.get('matcher')=='compact':
         for hook in h.get('hooks',[]): print(hook.get('command','')[:100])
-" "$settings" 2>/dev/null)
-  if [ -n "$compact_hook" ]; then
-    echo "  ✅ SessionStart compact хук найден"
-    echo "     $compact_hook"
+" "$sf" 2>/dev/null)
+  [ -n "$found" ] && compact_hook="$found" && break
+done
+if [ -z "$compact_hook" ] && [ ! -f .claude/settings.local.json ] && [ ! -f .claude/settings.json ]; then
+  echo "  ❌ No .claude/settings.json"
+elif [ -n "$compact_hook" ]; then
+  echo "  ✅ SessionStart compact хук найден"
+  echo "     $compact_hook"
+else
+  has_session=false
+  for sf in .claude/settings.local.json .claude/settings.json; do
+    [ -f "$sf" ] && grep -q "SessionStart" "$sf" 2>/dev/null && has_session=true && break
+  done
+  if [ "$has_session" = true ]; then
+    echo "  ⚠️ SessionStart хук есть, но нет matcher 'compact'"
   else
-    has_session=$(grep -q "SessionStart" "$settings" 2>/dev/null && echo "yes")
-    if [ "$has_session" = "yes" ]; then
-      echo "  ⚠️ SessionStart хук есть, но нет matcher 'compact'"
-      echo "     → Добавь matcher: 'compact' чтобы ремайндер срабатывал только после compaction"
-    else
-      echo "  ⚠️ Нет SessionStart compact хука"
-      echo "     После compaction Claude забудет критичные правила проекта"
-    fi
+    echo "  ⚠️ Нет SessionStart compact хука"
+    echo "     После compaction Claude забудет критичные правила проекта"
   fi
 fi
 ```
@@ -353,22 +356,23 @@ fi
 
 ```bash
 echo "=== Хук уведомлений ==="
-settings=""
-for sf in .claude/settings.local.json .claude/settings.json; do [ -f "$sf" ] && settings="$sf" && break; done
-if [ -z "$settings" ]; then
-  echo "  ❌ No .claude/settings.json"
-else
-  notif_hook=$(python3 -c "
+notif_hook=""
+for sf in .claude/settings.local.json .claude/settings.json; do
+  [ -f "$sf" ] || continue
+  found=$(python3 -c "
 import json, sys; data = json.load(open(sys.argv[1]))
 for h in data.get('hooks',{}).get('Notification',[]):
     for hook in h.get('hooks',[]): print(hook.get('command','')[:80])
-" "$settings" 2>/dev/null)
-  if [ -n "$notif_hook" ]; then
-    echo "  ✅ Хук уведомлений найден"
-    echo "$notif_hook" | grep -qiE "sound|notify-send|osascript" && echo "  ✅ Системное уведомление"
-  else
-    echo "  🔵 Нет хука уведомлений (опционально, но экономит время)"
-  fi
+" "$sf" 2>/dev/null)
+  [ -n "$found" ] && notif_hook="$found" && break
+done
+if [ -z "$notif_hook" ] && [ ! -f .claude/settings.local.json ] && [ ! -f .claude/settings.json ]; then
+  echo "  ❌ No .claude/settings.json"
+elif [ -n "$notif_hook" ]; then
+  echo "  ✅ Хук уведомлений найден"
+  echo "$notif_hook" | grep -qiE "sound|notify-send|osascript" && echo "  ✅ Системное уведомление"
+else
+  echo "  🔵 Нет хука уведомлений (опционально, но экономит время)"
 fi
 ```
 

@@ -187,9 +187,9 @@ if [ -f .git/hooks/pre-commit ]; then
   else
     echo "     ⚠️ Not a symlink — hook lives only in .git/ (not committable)"
   fi
-  # Check what it does:
-  hook_file=$(readlink .git/hooks/pre-commit 2>/dev/null || echo .git/hooks/pre-commit)
-  if [ -f "$hook_file" ]; then
+  # Check what it does (grep follows symlinks automatically):
+  hook_file=".git/hooks/pre-commit"
+  if [ -f "$hook_file" ] || [ -L "$hook_file" ]; then
     grep -qE "py_compile|tsc|syntax" "$hook_file" 2>/dev/null && echo "     syntax check: ✅" || echo "     syntax check: ⚠️ missing"
     grep -qE "ruff|eslint|clippy|lint" "$hook_file" 2>/dev/null && echo "     lint: ✅" || echo "     lint: ⚠️ missing"
     grep -qE "secret|password|token|gitleaks" "$hook_file" 2>/dev/null && echo "     secrets scan: ✅" || echo "     secrets scan: ⚠️ missing"
@@ -255,7 +255,7 @@ while read -r f; do
   grep -rqE 'fake|dummy|placeholder' "$f" 2>/dev/null && echo "     dummy env: ✅"
 done < <(find .github/workflows \( -name '*.yml' -o -name '*.yaml' \) 2>/dev/null)
 [ -f .gitlab-ci.yml ] && { ci_found=true; echo "  ✅ .gitlab-ci.yml"; }
-[ "$ci_found" = false ] && echo "  🔵 No CI workflow (опционально для соло-проектов)"
+if [ "$ci_found" = false ]; then echo "  🔵 No CI workflow (опционально для соло-проектов)"; fi
 ```
 
 ### Нужен ли CI?
@@ -352,8 +352,8 @@ if [ -f .git/hooks/pre-push ]; then
   else
     echo "     executable: ❌ (chmod +x needed)"
   fi
-  hook_file=$(readlink .git/hooks/pre-push 2>/dev/null || echo .git/hooks/pre-push)
-  if [ -f "$hook_file" ]; then
+  hook_file=".git/hooks/pre-push"
+  if [ -f "$hook_file" ] || [ -L "$hook_file" ]; then
     grep -qiE "pytest|npm test|cargo test|go test|test" "$hook_file" 2>/dev/null && echo "     tests: ✅" || echo "     tests: ⚠️ no test command found"
     grep -qiE "ruff|eslint|lint" "$hook_file" 2>/dev/null && echo "     lint gate: ✅" || echo "     lint gate: ⚠️ missing"
   fi

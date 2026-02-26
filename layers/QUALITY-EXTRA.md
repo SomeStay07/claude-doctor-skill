@@ -106,7 +106,7 @@ if [ -f tsconfig.json ]; then
   for d in src app lib; do [ -d "$d" ] && ts_dirs="${ts_dirs:+$ts_dirs }$d"; done
   if [ -n "$ts_dirs" ]; then
     any_count=$(grep -rn ": any" --include="*.ts" --include="*.tsx" $ts_dirs 2>/dev/null | grep -v "node_modules" | wc -l | tr -d ' ')
-    [ "$any_count" -gt 10 ] && echo "  ⚠️ $any_count ': any' uses — типизация обходится"
+    if [ "$any_count" -gt 10 ]; then echo "  ⚠️ $any_count ': any' uses — типизация обходится"; fi
   fi
 fi
 ```
@@ -302,13 +302,10 @@ PostToolUse ловит ошибки ПОСЛЕ записи. PreToolUse **пре
 
 ```bash
 echo "=== PreToolUse hooks ==="
-settings=""
-for sf in .claude/settings.local.json .claude/settings.json; do [ -f "$sf" ] && settings="$sf" && break; done
-if [ -z "$settings" ]; then
-  echo "  ❌ No .claude/settings.json"
-else
-  # Check for PreToolUse hooks:
-  pre_hooks=$(python3 -c "
+pre_hooks=""
+for sf in .claude/settings.local.json .claude/settings.json; do
+  [ -f "$sf" ] || continue
+  found=$(python3 -c "
 import json, sys
 data = json.load(open(sys.argv[1]))
 hooks = data.get('hooks', {}).get('PreToolUse', [])
@@ -316,9 +313,14 @@ for h in hooks:
     matcher = h.get('matcher', '(any)')
     for hook in h.get('hooks', []):
         cmd = hook.get('command', '')
-        cmd_short = cmd.split('/')[-1] if '/' in cmd else cmd[:60]
+        cmd_short = cmd.split('/')[-1].strip(\"'\\\"\") if '/' in cmd else cmd[:60]
         print(f'  📋 matcher={matcher} → {cmd_short}')
-" "$settings" 2>/dev/null)
+" "$sf" 2>/dev/null)
+  [ -n "$found" ] && pre_hooks="$found" && break
+done
+if [ -z "$pre_hooks" ] && [ ! -f .claude/settings.local.json ] && [ ! -f .claude/settings.json ]; then
+  echo "  ❌ No .claude/settings.json"
+else
 
   if [ -n "$pre_hooks" ]; then
     echo "$pre_hooks"

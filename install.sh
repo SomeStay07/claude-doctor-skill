@@ -11,7 +11,7 @@ NC='\033[0m' # No Color
 
 REPO="https://raw.githubusercontent.com/SomeStay07/claude-doctor-skill/main"
 DIR=".claude/skills/doctor"
-VERSION="2.5.0"
+VERSION="2.5.1"
 command -v curl &>/dev/null || { echo "❌ Error: curl is required but not installed"; exit 1; }
 
 # Header

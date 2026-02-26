@@ -120,36 +120,34 @@ fi
 
 ```bash
 echo "=== Stop hook ==="
-settings=""
-for sf in .claude/settings.local.json .claude/settings.json; do [ -f "$sf" ] && settings="$sf" && break; done
-if [ -n "$settings" ]; then
-  if grep -q '"Stop"' "$settings" 2>/dev/null; then
-    echo "  ✅ Stop hook configured"
-    # Find stop hook scripts (search for .sh files referenced in Stop section):
-    # Extract command value from JSON (handles $CLAUDE_PROJECT_DIR):
-    python3 -c "
-import json, sys
+stop_settings=""
+for sf in .claude/settings.local.json .claude/settings.json; do
+  [ -f "$sf" ] && grep -q '"Stop"' "$sf" 2>/dev/null && stop_settings="$sf" && break
+done
+if [ -n "$stop_settings" ]; then
+  echo "  ✅ Stop hook configured"
+  python3 -c "
+import json, sys, shlex
 data = json.load(open(sys.argv[1]))
-hooks = data.get('hooks', {}).get('Stop', [])
-for h in hooks:
+for h in data.get('hooks', {}).get('Stop', []):
     for hook in h.get('hooks', []):
         cmd = hook.get('command', '')
         if cmd:
-            print(cmd)
-" "$settings" 2>/dev/null | while read -r stop_cmd; do
-      resolved=$(echo "$stop_cmd" | sed "s|\"\\\$CLAUDE_PROJECT_DIR\"|$PWD|g" | sed "s|\\\$CLAUDE_PROJECT_DIR|$PWD|g" | sed 's|"||g')
-      if [ -f "$resolved" ]; then
-        echo "     script: $(basename "$resolved")"
-        grep -q "porcelain" "$resolved" 2>/dev/null && echo "     uncommitted check: ✅" || echo "     uncommitted check: ⚠️ missing"
-        grep -q "memory" "$resolved" 2>/dev/null && echo "     memory reminder: ✅" || echo "     memory reminder: ⚠️ missing"
-        grep -q "STOP_HOOK_ACTIVE" "$resolved" 2>/dev/null && echo "     loop protection: ✅" || echo "     loop protection: ⚠️ missing"
-      else
-        echo "     ⚠️ script not found: $resolved"
-      fi
-    done
-  else
-    echo "  ⚠️ No Stop hook — при выходе не напомнит про незакоммиченные изменения"
-  fi
+            parts = shlex.split(cmd)
+            print(parts[-1] if len(parts) > 1 else cmd)
+" "$stop_settings" 2>/dev/null | while read -r script_path; do
+    resolved=$(echo "$script_path" | sed "s|\\\$CLAUDE_PROJECT_DIR|$PWD|g")
+    if [ -f "$resolved" ]; then
+      echo "     script: $(basename "$resolved")"
+      grep -q "porcelain" "$resolved" 2>/dev/null && echo "     uncommitted check: ✅" || echo "     uncommitted check: ⚠️ missing"
+      grep -q "memory" "$resolved" 2>/dev/null && echo "     memory reminder: ✅" || echo "     memory reminder: ⚠️ missing"
+      grep -q "STOP_HOOK_ACTIVE" "$resolved" 2>/dev/null && echo "     loop protection: ✅" || echo "     loop protection: ⚠️ missing"
+    else
+      echo "     ⚠️ script not found: $resolved"
+    fi
+  done
+elif [ -f .claude/settings.local.json ] || [ -f .claude/settings.json ]; then
+  echo "  ⚠️ No Stop hook — при выходе не напомнит про незакоммиченные изменения"
 else
   echo "  ❌ No .claude/settings.json"
 fi

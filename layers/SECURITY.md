@@ -309,7 +309,8 @@ fi
 
 ```bash
 # Check permissions (should show -rw------- for sensitive files):
-ls -la .env .mcp.json *.pem *.key 2>/dev/null
+for f in .env .mcp.json; do [ -f "$f" ] && ls -la "$f"; done
+find . -maxdepth 1 \( -name "*.pem" -o -name "*.key" \) -exec ls -la {} + 2>/dev/null
 # Fix: chmod 600 .env .mcp.json
 ```
 
@@ -322,17 +323,12 @@ ls -la .env .mcp.json *.pem *.key 2>/dev/null
 - [ ] **Нет известных уязвимостей** в зависимостях
 
 ```bash
-# Python:
-pip-audit 2>/dev/null || echo "Install: pip install pip-audit"
-
-# Node.js:
-npm audit 2>/dev/null || echo "No package-lock.json"
-
-# Go:
-govulncheck ./... 2>/dev/null || echo "Install: go install golang.org/x/vuln/cmd/govulncheck@latest"
-
-# Rust:
-cargo audit 2>/dev/null || echo "Install: cargo install cargo-audit"
+pip-audit 2>/dev/null || true  # Python
+if [ -f pnpm-lock.yaml ]; then pnpm audit 2>/dev/null || true
+elif [ -f yarn.lock ]; then yarn audit 2>/dev/null || true
+elif [ -f package-lock.json ]; then npm audit 2>/dev/null || true; fi
+govulncheck ./... 2>/dev/null || true  # Go
+cargo audit 2>/dev/null || true  # Rust
 ```
 
 > https://owasp.org/Top10/A06_2021-Vulnerable_and_Outdated_Components/

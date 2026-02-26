@@ -1,5 +1,26 @@
 # Changelog
 
+## v2.5.1 — Field Tested Round 2 (8 fixes)
+
+Повторное тестирование v2.5.0 на тех же 3 проектах выявило 8 дополнительных багов.
+
+### 🔴 Critical fixes
+- `settings.local.json` без hooks shadows `settings.json` — теперь проверяются ОБА файла для каждого hook-чека (CONTEXT.md, DX.md, QUALITY-EXTRA.md)
+- `readlink` relative path → content analysis молча пропускалась для symlink-хуков — убран readlink, grep follows symlinks (QUALITY.md)
+- Stop hook — полная команда `python3 '/path'` как file path → `shlex.split` извлекает скрипт (DX.md)
+
+### 🟠 Important fixes
+- `ls *.pem *.key` glob fail exit 1 → цикл + find (SECURITY.md)
+- `npm audit` без pnpm/yarn → определение пакетного менеджера по lockfile (SECURITY.md)
+- CI exit code 1 propagation от `[ == false ] &&` → `if/fi` (QUALITY.md)
+
+### 🟡 Minor fixes
+- Trailing `'` в `cmd.split('/')[-1]` → `.strip("'\"")` (QUALITY-EXTRA.md)
+- `[ -gt 10 ] &&` exit 1 без else → `if/fi` (QUALITY-EXTRA.md)
+
+### Updated
+- install.sh: version 2.5.1
+
 ## v2.5.0 — Field Tested (9 fixes from real-world testing)
 
 Протестировано на 3 реальных проектах: cherry-cast (Python/Docker), telegram-crypto-info (Python/Makefile), telegram-ios-academy-foundation-pro (pnpm monorepo).
