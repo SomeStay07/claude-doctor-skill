@@ -1,5 +1,58 @@
 # Changelog
 
+## v2.4.0 — Precision (50 fixes + new detections)
+
+### 🔴 Critical fixes
+- **W19**: Division by zero in scoring — when layer has 0 applicable checks, weight redistributed proportionally (MATURITY.md)
+- **W4**: `mega_found` subshell variable — `find | while` → `while ... < <(find)` process substitution (FOUNDATION.md)
+- **W1/W27**: `src_dirs` leading space — `"$src_dirs $d"` → `${src_dirs:+$src_dirs }$d` across 15+ locations
+
+### 🟠 Important fixes
+- **W46/W47**: BSD grep — `grep \|` → `grep -E |` in QUALITY.md (2 remaining locations)
+- **W5**: Bare `exit 0` replaced with `if/else/fi` in SECURITY.md
+- **W6**: Unsafe `for f in $(find ...)` → `find | while read -r f` (SECURITY.md, QUALITY-EXTRA.md)
+- **W7**: `find -o` without grouping → `find \( -o \)` (FOUNDATION.md)
+- **W13/W44**: SAST detection — removed generic "security", added gosec/trivy/grype (SECURITY.md)
+- **W9**: `"$src_dirs"` quoted → unquoted `$src_dirs` for word splitting (DX.md)
+- **W10**: Hardcoded `src/ app/` → dynamic `$src_dirs` (QUALITY-EXTRA.md)
+- **W11/W24**: `grep "async"` → language-specific `async def`/`import asyncio` (INTELLIGENCE.md)
+- **W25**: React detection — Python `from react` → JS `from 'react'` (INTELLIGENCE.md)
+- **W12**: `grep "telegram"` → restricted to dependency files (INTELLIGENCE.md)
+
+### 🟡 Minor fixes (38)
+- **W8**: Unreliable multi-line catch detection removed (QUALITY.md)
+- **W15**: Redundant `grep -v "test"` removed (QUALITY.md)
+- **W18**: `.env` without `.env.example` no longer counts as has_env (MATURITY.md)
+- **W20**: "5 фаз" → "6 фаз" (SKILL.md)
+- **W22**: `""` → `placeholder` in fake data grep (QUALITY.md)
+- **W28**: Managed DB grep restricted to config files (SECURITY-EXTRA.md)
+- **W30**: Layer mapping `(0=Безопасность...5=DX)` added (SKILL.md)
+- **W31b**: Raw regex → human-readable labels in output (FOUNDATION.md)
+- **W32**: `/doctor layer 0` example added (SKILL.md)
+- **W33b/W48**: `command -v python3` guard added (CONTEXT.md)
+- **W34**: SKILL.md → GUARDRAILS.md reference fixed (README.md)
+- **W36**: FP-rule: empty layers 3-4 for Starter/Growing = normal (GUARDRAILS.md)
+- **W39**: SKILL.md description corrected (README.md)
+- **W42**: Missing files added to Contributing table (README.md)
+- **W45**: `command -v curl` check added (install.sh)
+- **W46b**: `trap cleanup ERR` added (install.sh)
+- Canonical `src_dirs` pattern documented (GUARDRAILS.md)
+- SKILL.md compressed: threshold → ref MATURITY.md, checklist → inline (-8 lines)
+- FOUNDATION.md compressed: dependency entries 3/line (-12 lines)
+- CHECKLIST.md: comments on why 5c/5e are `[cc]` tagged
+
+### New detections (informational)
+- **Biome**: `biome.json` / `biome.jsonc` in linter detection (MATURITY.md, QUALITY.md)
+- **Deno**: `deno.json` / `deno.jsonc` (MATURITY.md)
+- **Bun**: `bunfig.toml` (MATURITY.md)
+- **Monorepo tools**: `turbo.json`, `nx.json`, `lerna.json`, `pnpm-workspace.yaml` (MATURITY.md)
+- **Toolchain versioning**: `.tool-versions`, `.mise.toml`, `.rtx.toml`, `.python-version`, `.node-version`, `.nvmrc` (MATURITY.md)
+- **LICENSE**: informational check for LICENSE/LICENCE/COPYING files (FOUNDATION.md)
+
+### Updated
+- install.sh: version 2.4.0
+- Tag counts unchanged: 18 core + 9 quality + 7 advanced + 12 cc = 46
+
 ## v2.3.0 — Quality Release (10 bug fixes)
 
 ### Bug fixes

@@ -25,11 +25,11 @@ grep -rq "DATABASE_URL" .env.example .env 2>/dev/null && db_detected=true
 
 src_dirs=""
 for d in src app lib bot server backend api core pkg cmd internal services packages; do
-  [ -d "$d" ] && src_dirs="$src_dirs $d"
+  [ -d "$d" ] && src_dirs="${src_dirs:+$src_dirs }$d"
 done
 
 if [ -n "$src_dirs" ]; then
-  grep -rqE "asyncpg|psycopg|prisma|typeorm|sequelize|knex|sqlalchemy|mongoose|drizzle|diesel|ecto|activerecord" "$src_dirs" 2>/dev/null && db_detected=true
+  grep -rqE "asyncpg|psycopg|prisma|typeorm|sequelize|knex|sqlalchemy|mongoose|drizzle|diesel|ecto|activerecord" $src_dirs 2>/dev/null && db_detected=true
 fi
 
 if [ "$db_detected" = false ]; then
@@ -85,11 +85,11 @@ else
     echo "     Без миграций: ALTER TABLE вручную → потеря данных, невоспроизводимость"
     # Подсказки по стеку:
     if [ -n "$src_dirs" ]; then
-      grep -rqE "sqlalchemy|alembic" "$src_dirs" 2>/dev/null && echo "     → alembic init alembic"
-      grep -rq "prisma" "$src_dirs" 2>/dev/null && echo "     → npx prisma migrate dev"
-      grep -rq "knex" "$src_dirs" 2>/dev/null && echo "     → npx knex migrate:make init"
-      grep -rq "drizzle" "$src_dirs" 2>/dev/null && echo "     → npx drizzle-kit generate"
-      grep -rq "typeorm" "$src_dirs" 2>/dev/null && echo "     → npx typeorm migration:create"
+      grep -rqE "sqlalchemy|alembic" $src_dirs 2>/dev/null && echo "     → alembic init alembic"
+      grep -rq "prisma" $src_dirs 2>/dev/null && echo "     → npx prisma migrate dev"
+      grep -rq "knex" $src_dirs 2>/dev/null && echo "     → npx knex migrate:make init"
+      grep -rq "drizzle" $src_dirs 2>/dev/null && echo "     → npx drizzle-kit generate"
+      grep -rq "typeorm" $src_dirs 2>/dev/null && echo "     → npx typeorm migration:create"
     fi
   fi
 fi

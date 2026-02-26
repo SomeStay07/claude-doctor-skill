@@ -34,7 +34,7 @@ for d in tests test __tests__ spec; do
 done
 
 # 4. Линтер
-for f in ruff.toml .eslintrc .eslintrc.json .eslintrc.yml .eslintrc.js eslint.config.mjs eslint.config.js .flake8 .pylintrc clippy.toml .golangci.yml; do
+for f in ruff.toml .ruff.toml .eslintrc .eslintrc.json .eslintrc.yml .eslintrc.js eslint.config.mjs eslint.config.js .flake8 .pylintrc clippy.toml .golangci.yml biome.json biome.jsonc deno.json deno.jsonc bunfig.toml; do
   if [ -f "$f" ]; then
     has_linter=true; maturity_score=$((maturity_score + 1)); break
   fi
@@ -52,11 +52,23 @@ if [ -d .github/workflows ] || [ -f .gitlab-ci.yml ] || [ -f .circleci/config.ym
 fi
 
 # 6. Env handling
-if [ -f .env.example ] || [ -f .env ]; then
+if [ -f .env.example ]; then
   has_env=true; maturity_score=$((maturity_score + 1))
 fi
 
-# 7. Claude Code
+# 7. Toolchain versioning
+has_toolchain=false
+for f in .tool-versions .mise.toml .rtx.toml .python-version .node-version .nvmrc; do
+  [ -f "$f" ] && has_toolchain=true && break
+done
+
+# 8. Monorepo detection
+has_monorepo=false
+for f in turbo.json nx.json lerna.json pnpm-workspace.yaml; do
+  [ -f "$f" ] && has_monorepo=true && break
+done
+
+# 9. Claude Code
 if [ -d .claude ]; then
   has_claude=true; maturity_score=$((maturity_score + 1))
 fi
@@ -150,6 +162,21 @@ fi
 - Формула: `score_layer / max_applicable` (max_applicable = всего − N/A − бонус)
 
 Это гарантирует что проект без Docker не штрафуется за Docker-чеки, а проект без БД — за миграции.
+
+### Перераспределение весов при max_applicable=0
+
+Если у слоя нет применимых чеков (все бонусные или все N/A), его вес перераспределяется пропорционально на остальные слои:
+
+```
+remaining = Σ весов слоёв где max > 0
+new_weight_i = original_weight_i / remaining × 100%
+```
+
+Пример (Growing, слои 3-4 пустые — все чеки `[cc]`):
+- Оригинал: 30/25/30/5/5/5
+- Слои 3,4 = 0 applicable → 10% перераспределяется
+- remaining = 30+25+30+5 = 90%
+- Новые: 33.3/27.8/33.3/—/—/5.6
 
 ---
 

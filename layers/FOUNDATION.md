@@ -24,7 +24,8 @@
 
 # Проверить ключевые разделы (без учёта регистра):
 for section in "quick start|getting started" "architecture|structure" "critical|rules|must follow" "known issues|troubleshoot"; do
-  grep -qiE "$section" CLAUDE.md 2>/dev/null && echo "✅ Has: $section" || echo "⚠️ Missing section: $section"
+  label=$(echo "$section" | sed 's/|/ \/ /g; s/\b\w/\U&/g')
+  grep -qiE "$section" CLAUDE.md 2>/dev/null && echo "✅ Has: $label" || echo "⚠️ Missing section: $label"
 done
 
 # Проверить наличие блоков кода (готовых к копированию):
@@ -82,14 +83,11 @@ manifest_found=false
 
 # --- Простые файлы (проверка наличия) ---
 for entry in \
-  "requirements.txt|Python" "pyproject.toml|Python" "setup.py|Python" "setup.cfg|Python" \
-  "package.json|Node.js" "Cargo.toml|Rust" "go.mod|Go" "Package.swift|Swift" \
-  "Podfile|CocoaPods" "Gemfile|Ruby" "pom.xml|Java/Kotlin" "build.gradle|Java/Kotlin" \
-  "build.gradle.kts|Java/Kotlin" "composer.json|PHP" "mix.exs|Elixir" \
-  "pubspec.yaml|Dart/Flutter" "CMakeLists.txt|C/C++" "meson.build|C/C++" \
-  "conanfile.txt|C/C++" "conanfile.py|C/C++" "build.sbt|Scala" "stack.yaml|Haskell" \
-  "build.zig|Zig" "project.clj|Clojure" "deps.edn|Clojure" \
-  "Makefile.PL|Perl" "cpanfile|Perl"; do
+  "requirements.txt|Python" "pyproject.toml|Python" "setup.py|Python" "setup.cfg|Python" "package.json|Node.js" "Cargo.toml|Rust" \
+  "go.mod|Go" "Package.swift|Swift" "Podfile|CocoaPods" "Gemfile|Ruby" "pom.xml|Java/Kotlin" "build.gradle|Java/Kotlin" \
+  "build.gradle.kts|Java/Kotlin" "composer.json|PHP" "mix.exs|Elixir" "pubspec.yaml|Dart/Flutter" "CMakeLists.txt|C/C++" \
+  "meson.build|C/C++" "conanfile.txt|C/C++" "conanfile.py|C/C++" "build.sbt|Scala" "stack.yaml|Haskell" "build.zig|Zig" \
+  "project.clj|Clojure" "deps.edn|Clojure" "Makefile.PL|Perl" "cpanfile|Perl"; do
   file="${entry%%|*}"; label="${entry#*|}"
   if [ -f "$file" ]; then
     manifest_found=true
@@ -122,25 +120,23 @@ fi
 if [ "$manifest_found" = false ]; then
   src_dirs=""
   for d in src app lib bot server backend api core pkg cmd internal services packages Sources; do
-    [ -d "$d" ] && src_dirs="$src_dirs $d"
+    [ -d "$d" ] && src_dirs="${src_dirs:+$src_dirs }$d"
   done
   if [ -n "$src_dirs" ]; then
     echo "  🔴 Source code exists ($src_dirs) but NO dependency manifest!"
     echo "     → Другой разработчик (и Claude) не знает какие пакеты нужны"
     # Подсказка на основе обнаруженного языка:
     for entry in \
-      "*.py|pip freeze > requirements.txt" "*.js *.ts|npm init -y" \
-      "*.swift|swift package init" "*.go|go mod init <module>" \
-      "*.rs|cargo init" "*.rb|bundle init" "*.java *.kt|pom.xml или build.gradle" \
-      "*.c *.cpp *.cc *.h|cmake_minimum_required(...) в CMakeLists.txt" \
-      "*.cs|dotnet new console" "*.scala|build.sbt" "*.hs|cabal init или stack init" \
-      "*.zig|zig init" "*.clj *.cljs|deps.edn или lein new" "*.pl *.pm|cpanfile" \
-      "*.R *.r|usethis::create_package()" "*.php|composer init" \
-      "*.ex *.exs|mix new <project>" "*.dart|dart create или flutter create"; do
+      "*.py|pip freeze > requirements.txt" "*.js *.ts|npm init -y" "*.swift|swift package init" \
+      "*.go|go mod init <module>" "*.rs|cargo init" "*.rb|bundle init" \
+      "*.java *.kt|pom.xml или build.gradle" "*.c *.cpp *.cc *.h|cmake_minimum_required(...) в CMakeLists.txt" \
+      "*.cs|dotnet new console" "*.scala|build.sbt" "*.hs|cabal init или stack init" "*.zig|zig init" \
+      "*.clj *.cljs|deps.edn или lein new" "*.pl *.pm|cpanfile" "*.R *.r|usethis::create_package()" \
+      "*.php|composer init" "*.ex *.exs|mix new <project>" "*.dart|dart create или flutter create"; do
       globs="${entry%%|*}"; hint="${entry#*|}"
       count=0
       for g in $globs; do
-        c=$(find "$src_dirs" -name "$g" 2>/dev/null | wc -l | tr -d ' ')
+        c=$(find $src_dirs -name "$g" 2>/dev/null | wc -l | tr -d ' ')
         count=$((count + c))
       done
       [ "$count" -gt 0 ] && echo "     → Создай: $hint"
@@ -247,21 +243,20 @@ echo "=== Project structure ==="
 echo "--- Mega-files (>500 lines) ---"
 mega_found=false
 for ext in py ts js go rs rb java kt swift php ex dart c cpp cs scala; do
-  find . -maxdepth 3 -name "*.$ext" \
-    ! -path "./.venv/*" ! -path "./node_modules/*" ! -path "./.git/*" \
-    ! -path "./dist/*" ! -path "./build/*" ! -path "./target/*" \
-    2>/dev/null | while read -r f; do
+  while read -r f; do
     lines=$(wc -l < "$f" | tr -d ' ')
     if [ "$lines" -gt 500 ]; then
       echo "  🟠 $f ($lines lines) — слишком большой, разбей на модули"
       mega_found=true
     fi
-  done
+  done < <(find . -maxdepth 3 -name "*.$ext" \
+    ! -path "./.venv/*" ! -path "./node_modules/*" ! -path "./.git/*" \
+    ! -path "./dist/*" ! -path "./build/*" ! -path "./target/*" 2>/dev/null)
 done
 
 # Проверить захламлённость корня:
 echo "--- Root clutter ---"
-root_src=$(find . -maxdepth 1 -name "*.py" -o -name "*.ts" -o -name "*.js" -o -name "*.go" 2>/dev/null | wc -l | tr -d ' ')
+root_src=$(find . -maxdepth 1 \( -name "*.py" -o -name "*.ts" -o -name "*.js" -o -name "*.go" \) 2>/dev/null | wc -l | tr -d ' ')
 if [ "$root_src" -gt 5 ]; then
   echo "  🟠 $root_src source files in root — организуй в папки (src/, app/, lib/)"
 elif [ "$root_src" -gt 0 ]; then
@@ -381,6 +376,11 @@ if [ -f README.md ]; then
 else
   echo "  ⚠️ No README.md — создай с описанием + Quick Start + инструкция запуска"
 fi
+
+# LICENSE detection (informational, not scored)
+has_license=false
+for f in LICENSE LICENSE.md LICENSE.txt LICENCE LICENCE.md COPYING; do [ -f "$f" ] && has_license=true && break; done
+$has_license && echo "  ℹ️  LICENSE file detected" || echo "  ℹ️  No LICENSE file (consider adding one for open-source projects)"
 ```
 
 ### Зачем README если есть CLAUDE.md

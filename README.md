@@ -550,7 +550,7 @@ Doctor is just `.md` files — contributing is straightforward:
 1. Fork this repo
 2. Edit the relevant file:
    - **Add a check** → edit the layer file in `layers/` (e.g., `SECURITY.md`) and update `CHECKLIST.md`
-   - **Add a false positive rule** → edit `SKILL.md`, section "НЕ отмечай как проблему"
+   - **Add a false positive rule** → edit `GUARDRAILS.md`, section "НЕ отмечай как проблему"
    - **Add a new stack** → edit `layers/FOUNDATION.md` (detection) and `layers/QUALITY.md` (linter/formatter)
    - **Fix a bug** → edit `SKILL.md` or the relevant layer file
 3. Test by placing files in your project's `.claude/skills/doctor/` and running `/doctor scan`
@@ -560,15 +560,20 @@ Doctor is just `.md` files — contributing is straightforward:
 
 | File | What to edit for |
 |:-----|:-----------------|
-| `SKILL.md` | Core behavior, phases, guardrails, false positive rules |
+| `SKILL.md` | Core behavior, protocol, phases, subcommands |
+| `GUARDRAILS.md` | Output format, error recovery, self-check, false positives |
 | `CHECKLIST.md` | Check index (names + layer assignments) |
 | `layers/SECURITY.md` | Security checks (layer 0) |
 | `layers/FOUNDATION.md` | Foundation checks + stack detection (layer 1) |
+| `layers/FOUNDATION-EXTRA.md` | Advanced foundation (1g DB migrations) |
 | `layers/QUALITY.md` | Quality gate checks (layer 2) |
 | `layers/QUALITY-EXTRA.md` | Advanced quality checks (layer 2) |
+| `layers/QUALITY-PROD.md` | Production quality (2l error monitoring) |
 | `layers/INTELLIGENCE.md` | Agent + domain rule checks (layer 3) |
 | `layers/CONTEXT.md` | MCP + memory checks (layer 4) |
 | `layers/DX.md` | Developer experience checks (layer 5) |
+| `layers/DX-EXTRA.md` | Advanced DX checks (5e-5g) |
+| `layers/MATURITY.md` | Maturity detection, weighted scoring, thresholds |
 
 ## Roadmap
 

@@ -123,9 +123,9 @@
 **Краткая сводка** (7 проверок):
 - [ ] `[cc]` Скиллы — `/test` + `/status` минимум, с triggers и $ARGUMENTS handling
 - [ ] `[quality]` Stop хук — напоминание про uncommitted changes + memory при выходе
-- [ ] `[cc]` Юнит-тесты — существуют, проходят, покрывают source модули
+- [ ] `[cc]` Юнит-тесты — существуют, проходят, покрывают source модули <!-- [cc]: диагностический скрипт запускается внутри CC-сессии, проверяет покрытие модулей чтобы Claude мог валидировать свой сгенерированный код -->
 - [ ] `[advanced]` Smoke-тесты — быстрая проверка "приложение запускается?" (<5 секунд)
-- [ ] `[cc]` Dependabot / Renovate — автообновление зависимостей, weekly/monthly schedule
+- [ ] `[cc]` Dependabot / Renovate — автообновление зависимостей, weekly/monthly schedule <!-- [cc]: проверяет наличие .github/dependabot.yml или renovate.json — CC-specific DX, т.к. Claude Code активно добавляет зависимости и нужен автоматический контроль их актуальности -->
 - [ ] `[core]` Установщик хуков — scripts/install-hooks.sh + make hooks, symlinks в .git/hooks/
 - [ ] `[quality]` Оптимизация скиллов — disable-model-invocation: true на command-runner скиллах (/test, /status)
 

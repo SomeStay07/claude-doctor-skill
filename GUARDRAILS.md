@@ -91,6 +91,8 @@
 - Нет `package-lock.json` если используется pnpm (`pnpm-lock.yaml`) или bun (`bun.lockb`)
 - Нет `.git/hooks/pre-commit` если используется husky (`.husky/` directory)
 - Нет единого корневого `package.json` в монорепах с `packages/` или `apps/`
+- Пустые слои 3-4 (Intelligence/Context) у Starter/Growing — это нормально, не ошибка.
+  Эти слои проверяют продвинутые паттерны, которые появляются на поздних стадиях.
 
 ---
 
@@ -106,6 +108,22 @@
 - [ ] ТОП-3 ПРИОРИТЕТА выведен
 - [ ] Блок "Следующий уровень" показан
 - [ ] Пользователь спрошен "Исправить все сразу или по одной?"
+
+---
+
+## Канонический src_dirs паттерн
+
+Во всех слоях используется единый паттерн для построения списка исходных директорий:
+
+```bash
+src_dirs=""
+for d in src app lib internal cmd pkg; do [ -d "$d" ] && src_dirs="${src_dirs:+$src_dirs }$d"; done
+```
+
+Правила:
+- `${src_dirs:+$src_dirs }$d` — пробел-разделитель только если src_dirs НЕ пуст
+- `$src_dirs` БЕЗ кавычек в grep/find — нужен word splitting
+- `"$src_dirs"` В кавычках только в `[ -n "$src_dirs" ]` проверках
 
 ---
 

@@ -7,12 +7,10 @@
 
 ## 2g. Branch protection — PR workflow (~10 мин) [advanced]
 
-Прямой push в main — рецепт катастрофы. **Branch protection** — мерж только через Pull Request.
+Прямой push в main — рецепт катастрофы. **Branch protection** — мерж только через PR.
 
-- [ ] **Ветка по умолчанию защищена** — прямой push в main/master запрещён
-- [ ] **PR обязателен** — мерж только через Pull Request
-- [ ] **Status checks обязательны** — CI должен пройти перед мержем (если CI настроен)
-- [ ] **Именование веток** — feature branches по конвенции (`feature/`, `fix/`, `chore/`)
+- [ ] **Ветка защищена + PR обязателен** — прямой push в main запрещён, мерж только через PR
+- [ ] **Status checks + именование** — CI перед мержем, ветки по конвенции (`feature/`, `fix/`, `chore/`)
 
 ### Команды проверки
 
@@ -93,10 +91,10 @@ if [ -f requirements.txt ] || [ -f pyproject.toml ]; then
 
   # Type annotations:
   src_dirs=""
-  for d in src app lib bot server backend api core pkg cmd internal services packages; do [ -d "$d" ] && src_dirs="$src_dirs $d"; done
+  for d in src app lib bot server backend api core pkg cmd internal services packages; do [ -d "$d" ] && src_dirs="${src_dirs:+$src_dirs }$d"; done
   if [ -n "$src_dirs" ]; then
-    total=$(grep -rn "def " --include="*.py" "$src_dirs" 2>/dev/null | wc -l | tr -d ' ')
-    typed=$(grep -rn "def .*->.*:" --include="*.py" "$src_dirs" 2>/dev/null | wc -l | tr -d ' ')
+    total=$(grep -rn "def " --include="*.py" $src_dirs 2>/dev/null | wc -l | tr -d ' ')
+    typed=$(grep -rn "def .*->.*:" --include="*.py" $src_dirs 2>/dev/null | wc -l | tr -d ' ')
     [ "$total" -gt 0 ] && { pct=$((typed*100/total)); echo "  📊 Annotations: $typed/$total ($pct%)"; [ "$pct" -lt 30 ] && echo "     ⚠️ Мало аннотаций"; }
   fi
 fi
@@ -104,8 +102,12 @@ fi
 if [ -f tsconfig.json ]; then
   echo "  ✅ tsconfig.json"
   grep -q '"strict"[[:space:]]*:[[:space:]]*true' tsconfig.json 2>/dev/null && echo "  ✅ strict mode" || echo "  ⚠️ strict mode NOT enabled"
-  any_count=$(grep -rn ": any" --include="*.ts" --include="*.tsx" src/ app/ 2>/dev/null | grep -v "node_modules" | wc -l | tr -d ' ')
-  [ "$any_count" -gt 10 ] && echo "  ⚠️ $any_count ': any' uses — типизация обходится"
+  ts_dirs=""
+  for d in src app lib; do [ -d "$d" ] && ts_dirs="${ts_dirs:+$ts_dirs }$d"; done
+  if [ -n "$ts_dirs" ]; then
+    any_count=$(grep -rn ": any" --include="*.ts" --include="*.tsx" $ts_dirs 2>/dev/null | grep -v "node_modules" | wc -l | tr -d ' ')
+    [ "$any_count" -gt 10 ] && echo "  ⚠️ $any_count ': any' uses — типизация обходится"
+  fi
 fi
 ```
 
@@ -170,7 +172,7 @@ if [ -f requirements.txt ] || [ -f pyproject.toml ]; then
   fi
 
   # Check CI for coverage:
-  for f in $(find .github/workflows -name '*.yml' -o -name '*.yaml' 2>/dev/null); do
+  find .github/workflows -name '*.yml' -o -name '*.yaml' 2>/dev/null | while read -r f; do
     if grep -qiE 'coverage|pytest-cov|--cov' "$f" 2>/dev/null; then
       echo "  ✅ Coverage in CI: $(basename "$f")"
     fi
@@ -223,13 +225,13 @@ echo "=== Production logging ==="
 if [ -f requirements.txt ] || [ -f pyproject.toml ]; then
   src_dirs=""
   for d in src app lib bot server backend api core pkg cmd internal services packages; do
-    [ -d "$d" ] && src_dirs="$src_dirs $d"
+    [ -d "$d" ] && src_dirs="${src_dirs:+$src_dirs }$d"
   done
   if [ -n "$src_dirs" ]; then
-    print_count=$(grep -rn "^\s*print(" --include="*.py" "$src_dirs" 2>/dev/null | grep -v "#" | grep -v "test" | wc -l | tr -d ' ')
+    print_count=$(grep -rn "^\s*print(" --include="*.py" $src_dirs 2>/dev/null | grep -v "#" | grep -v "test" | wc -l | tr -d ' ')
     if [ "$print_count" -gt 5 ]; then
       echo "  🟠 $print_count print() statements in production code"
-      grep -rn "^\s*print(" --include="*.py" "$src_dirs" 2>/dev/null | grep -v "#" | grep -v "test" | head -5 | while read -r line; do
+      grep -rn "^\s*print(" --include="*.py" $src_dirs 2>/dev/null | grep -v "#" | grep -v "test" | head -5 | while read -r line; do
         echo "     $line"
       done
       echo "     → Замени на logging.info()/logging.debug()"
@@ -240,7 +242,7 @@ if [ -f requirements.txt ] || [ -f pyproject.toml ]; then
     fi
 
     # Check logging is configured:
-    if grep -rq "import logging" --include="*.py" "$src_dirs" 2>/dev/null; then
+    if grep -rq "import logging" --include="*.py" $src_dirs 2>/dev/null; then
       echo "  ✅ logging module used"
     else
       echo "  ⚠️ logging module not imported — возможно весь вывод через print()"
@@ -252,10 +254,10 @@ fi
 if [ -f package.json ]; then
   src_dirs=""
   for d in src app lib bot server backend api core pkg cmd internal services packages; do
-    [ -d "$d" ] && src_dirs="$src_dirs $d"
+    [ -d "$d" ] && src_dirs="${src_dirs:+$src_dirs }$d"
   done
   if [ -n "$src_dirs" ]; then
-    console_count=$(grep -rn "console\.\(log\|info\|warn\|error\)" --include="*.ts" --include="*.js" "$src_dirs" 2>/dev/null | grep -v "test" | grep -v "spec" | wc -l | tr -d ' ')
+    console_count=$(grep -rnE "console\.(log|info|warn|error)" --include="*.ts" --include="*.js" $src_dirs 2>/dev/null | grep -v "test" | grep -v "spec" | wc -l | tr -d ' ')
     if [ "$console_count" -gt 10 ]; then
       echo "  🟠 $console_count console.* calls in production code"
       echo "     → Используй winston/pino вместо console.log"

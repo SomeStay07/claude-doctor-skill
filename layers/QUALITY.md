@@ -42,6 +42,8 @@ fi
 if [ -f package.json ]; then
   if [ -f .eslintrc ] || [ -f .eslintrc.js ] || [ -f .eslintrc.json ] || [ -f eslint.config.js ] || [ -f eslint.config.mjs ] || [ -f eslint.config.cjs ]; then
     echo "  ✅ eslint config"
+  elif [ -f biome.json ] || [ -f biome.jsonc ]; then
+    echo "  ✅ biome config"
   elif grep -q '"eslint"' package.json 2>/dev/null; then
     echo "  ⚠️ eslint в зависимостях, но нет конфига"
   fi
@@ -97,7 +99,7 @@ for settings_file in ".claude/settings.json" ".claude/settings.local.json"; do
     if grep -q "PostToolUse" "$settings_file" 2>/dev/null; then
       echo "  ✅ PostToolUse hook in $settings_file"
       # Check what it does (in settings AND referenced scripts):
-      if grep -q "Edit\|Write" "$settings_file" 2>/dev/null; then
+      if grep -qE "Edit|Write" "$settings_file" 2>/dev/null; then
         echo "     matcher: Edit|Write ✅"
       fi
       # Check settings + hook scripts for format & syntax:
@@ -106,7 +108,7 @@ for settings_file in ".claude/settings.json" ".claude/settings.local.json"; do
       else
         echo "     format: ⚠️ no formatting in hook"
       fi
-      if grep -ql "py_compile\|tsc\|--check" "$settings_file" .claude/hooks/*.sh 2>/dev/null; then
+      if grep -qlE "py_compile|tsc|--check" "$settings_file" .claude/hooks/*.sh 2>/dev/null; then
         echo "     syntax check: ✅"
       else
         echo "     syntax check: ⚠️ no syntax validation"
@@ -245,13 +247,13 @@ done
 ```bash
 echo "=== CI/CD ==="
 ci_found=false
-for f in $(find .github/workflows -name '*.yml' -o -name '*.yaml' 2>/dev/null); do
+while read -r f; do
   [ -f "$f" ] || continue
   ci_found=true
   echo "  ✅ $(basename "$f")"
   grep -q "needs:" "$f" 2>/dev/null && echo "     stages: ✅" || echo "     stages: ⚠️ no 'needs:' (lint should be first)"
-  grep -qE 'fake|dummy|""' "$f" 2>/dev/null && echo "     dummy env: ✅"
-done
+  grep -rqE 'fake|dummy|placeholder' "$f" 2>/dev/null && echo "     dummy env: ✅"
+done < <(find .github/workflows -name '*.yml' -o -name '*.yaml' 2>/dev/null)
 [ -f .gitlab-ci.yml ] && { ci_found=true; echo "  ✅ .gitlab-ci.yml"; }
 [ "$ci_found" = false ] && echo "  🔵 No CI workflow (опционально для соло-проектов)"
 ```
@@ -287,9 +289,9 @@ echo "=== Error handling ==="
 # Python — bare except:
 if [ -f requirements.txt ] || [ -f pyproject.toml ]; then
   src_dirs=""
-  for d in src app lib bot server backend api core pkg cmd internal services packages; do [ -d "$d" ] && src_dirs="$src_dirs $d"; done
+  for d in src app lib bot server backend api core pkg cmd internal services packages; do [ -d "$d" ] && src_dirs="${src_dirs:+$src_dirs }$d"; done
   if [ -n "$src_dirs" ]; then
-    bare_all=$(grep -rn "^[[:space:]]*except:" --include="*.py" "$src_dirs" 2>/dev/null)
+    bare_all=$(grep -rn "^[[:space:]]*except:" --include="*.py" $src_dirs 2>/dev/null)
     bare_count=$(echo "$bare_all" | grep -v "^$" | wc -l | tr -d ' ')
     if [ "$bare_count" -gt 0 ]; then
       echo "  🟠 $bare_count bare 'except:' (проглатывают ВСЕ ошибки):"
@@ -298,7 +300,7 @@ if [ -f requirements.txt ] || [ -f pyproject.toml ]; then
     else
       echo "  ✅ No bare except statements"
     fi
-    pass_count=$(grep -rn -A1 "except" --include="*.py" "$src_dirs" 2>/dev/null | grep -c "pass" | tr -d ' ')
+    pass_count=$(grep -rn -A1 "except" --include="*.py" $src_dirs 2>/dev/null | grep -c "pass" | tr -d ' ')
     [ "$pass_count" -gt 3 ] && echo "  ⚠️ $pass_count 'except ... pass' blocks — ошибки проглатываются молча"
   fi
   # Check ruff E722:
@@ -312,11 +314,9 @@ fi
 # Node.js — empty catch:
 if [ -f package.json ]; then
   src_dirs=""
-  for d in src app lib bot server backend api core pkg cmd internal services packages; do [ -d "$d" ] && src_dirs="$src_dirs $d"; done
+  for d in src app lib bot server backend api core pkg cmd internal services packages; do [ -d "$d" ] && src_dirs="${src_dirs:+$src_dirs }$d"; done
   if [ -n "$src_dirs" ]; then
-    empty_single=$(grep -rn "catch.*{}" --include="*.ts" --include="*.js" $src_dirs 2>/dev/null | wc -l | tr -d ' ')
-    empty_multi=$(grep -rn -A1 "catch.*{$" --include="*.ts" --include="*.js" $src_dirs 2>/dev/null | grep -B1 "^[[:space:]]*}$" | grep -c "catch" || echo 0)
-    empty_catch=$((empty_single + empty_multi))
+    empty_catch=$(grep -rn "catch.*{}" --include="*.ts" --include="*.js" $src_dirs 2>/dev/null | wc -l | tr -d ' ')
     [ "$empty_catch" -gt 0 ] && echo "  🟠 $empty_catch empty catch blocks (ошибки проглатываются)" || echo "  ✅ No empty catch blocks"
   fi
 fi

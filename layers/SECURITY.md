@@ -108,8 +108,8 @@ fi
 
 # Check CI for SAST:
 sast_in_ci=false
-for f in $(find .github/workflows -name '*.yml' -o -name '*.yaml' 2>/dev/null); do
-  if grep -qiE 'bandit|semgrep|snyk|codeql|security' "$f" 2>/dev/null; then
+find .github/workflows -name '*.yml' -o -name '*.yaml' 2>/dev/null | while read -r f; do
+  if grep -qiE 'bandit|semgrep|snyk|codeql|gosec|trivy|grype' "$f" 2>/dev/null; then
     sast_in_ci=true
     echo "  ✅ SAST in CI: $(basename "$f")"
   fi
@@ -130,12 +130,11 @@ fi
 
 ### SAST по стеку
 
-| Стек | Инструмент | Что ловит | Установка |
-|------|-----------|-----------|-----------|
-| Python | bandit / ruff S-rules | SQL injection, захардкоженные пароли, небезопасные вызовы | `pip install bandit` |
-| Node.js | eslint-plugin-security | Небезопасные функции, RegExp DoS, небезопасный require | `npm i -D eslint-plugin-security` |
-| Go | gosec | SQL injection, слабая криптография, права файлов | `go install github.com/securego/gosec/v2/cmd/gosec@latest` |
-| Мульти | semgrep | 2000+ правил, все языки | `pip install semgrep` |
+| Стек | Инструмент | Установка |
+|------|-----------|-----------|
+| Python | bandit, ruff S-rules | `pip install bandit` |
+| Node.js | eslint-plugin-security | `npm i -D eslint-plugin-security` |
+| Go / Multi | gosec, semgrep, trivy, grype | `pip install semgrep` / `brew install trivy` |
 
 > https://www.invicti.com/blog/security-labs/security-issues-in-vibe-coded-web-apps-analyzed/
 > https://appwrite.io/blog/post/vibe-coding-security-best-practices
@@ -285,7 +284,9 @@ grep -nE '=[[:space:]]*[A-Za-z0-9+/]{20,}' .env.example 2>/dev/null \
   && echo "🔴 POSSIBLE REAL SECRET in .env.example!" || echo "✅ No real secrets"
 
 # Sync check (requires .env):
-[[ ! -f .env ]] && echo "⚠️ No .env found (create from .env.example)" && exit 0
+if [ ! -f .env ]; then
+  echo "⚠️ No .env found (create from .env.example)"
+else
 
 echo "=== MISSING from .env ==="
 diff <(grep -E '^[A-Z_]+=' .env.example | sed 's/=.*//' | sort -u) \
@@ -294,6 +295,7 @@ diff <(grep -E '^[A-Z_]+=' .env.example | sed 's/=.*//' | sort -u) \
 echo "=== UNDOCUMENTED in .env ==="
 diff <(grep -E '^#?[[:space:]]*[A-Z_]+=' .env.example | sed 's/^#[[:space:]]*//' | sed 's/=.*//' | sort -u) \
      <(grep -E '^[A-Z_]+=' .env | sed 's/=.*//' | sort -u) 2>/dev/null | grep "^>" | sed 's/^> /  /'
+fi
 ```
 
 > https://12factor.net/config

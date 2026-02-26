@@ -195,13 +195,7 @@ fi
 # Find source directories:
 src_dirs=""
 for d in src app lib bot server backend api core pkg cmd internal services packages; do
-  if [ -d "$d" ]; then
-    if [ -z "$src_dirs" ]; then
-      src_dirs="$d"
-    else
-      src_dirs="$src_dirs $d"
-    fi
-  fi
+  [ -d "$d" ] && src_dirs="${src_dirs:+$src_dirs }$d"
 done
 
 # Coverage ratio (Python):
@@ -209,14 +203,14 @@ if [ -n "$test_dir" ] && [ -n "$src_dirs" ]; then
   echo "=== Test coverage ==="
   missing=0
   total=0
-  for f in $(find "$src_dirs" -name "*.py" ! -name "__init__.py" ! -path "*__pycache__*" 2>/dev/null); do
+  while read -r f; do
     base=$(basename "$f" .py)
     total=$((total + 1))
     if ! find "$test_dir" -name "*${base}*" -name "*.py" 2>/dev/null | grep -q .; then
       echo "  ⚠️ MISSING tests: $f"
       missing=$((missing + 1))
     fi
-  done
+  done < <(find $src_dirs -name "*.py" ! -name "__init__.py" ! -path "*__pycache__*" 2>/dev/null)
   covered=$((total - missing))
   if [ "$total" -gt 0 ]; then
     pct=$((covered * 100 / total))
@@ -226,16 +220,17 @@ fi
 
 # Coverage ratio (TypeScript/JavaScript):
 if [ -n "$test_dir" ] && [ -n "$src_dirs" ]; then
-  ts_files=$(find "$src_dirs" -name "*.ts" -not -name "*.test.*" -not -name "*.spec.*" -not -name "*.d.ts" 2>/dev/null | wc -l | tr -d ' ')
+  ts_files=$(find $src_dirs -name "*.ts" -not -name "*.test.*" -not -name "*.spec.*" -not -name "*.d.ts" 2>/dev/null | wc -l | tr -d ' ')
   if [ "$ts_files" -gt 0 ]; then
     echo "=== TypeScript test coverage ==="
     ts_missing=0
-    for f in $(find "$src_dirs" -name "*.ts" -not -name "*.test.*" -not -name "*.spec.*" -not -name "*.d.ts" 2>/dev/null); do
+    while read -r f; do
       base=$(basename "$f" .ts)
       if ! find . -name "${base}.test.ts" -o -name "${base}.spec.ts" 2>/dev/null | grep -q .; then
         echo "  ⚠️ MISSING tests: $f"
         ts_missing=$((ts_missing + 1))
       fi
+    done < <(find $src_dirs -name "*.ts" -not -name "*.test.*" -not -name "*.spec.*" -not -name "*.d.ts" 2>/dev/null)
     done
     ts_covered=$((ts_files - ts_missing))
     pct=$((ts_covered * 100 / ts_files))
