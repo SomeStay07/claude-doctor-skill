@@ -1,5 +1,26 @@
 # Changelog
 
+## v3.0.0 — Stable Release
+
+Doctor is field-tested and production-ready. 89 bugs found and fixed across 4 rounds of real-world testing on 3 projects (Python/Docker, Python/Makefile, Swift/iOS).
+
+### What's new in v3.0.0
+- **README fully rewritten** — cleaner structure, real output examples, monorepo FAQ, timing info
+- **All old development branches cleaned up** — only `main` remains
+- **install.sh**: version 3.0.0
+
+### Since v2.0.0 (cumulative)
+- 89 bug fixes across v2.4.0 → v2.5.3 (4 rounds of field testing)
+- Monorepo support: `apps/` in src_dirs, `find -maxdepth 3` for configs
+- `settings.local.json` + `settings.json` dual-file hook detection
+- pnpm/yarn/npm audit by lockfile detection
+- Exit code propagation fixes (`if/fi` instead of `[ ] &&`)
+- `grep -c` zero-count fix across 13 locations
+- Build artifact exclusions (`dist/`, `build/`, `target/`, `coverage/`, `*.spec.*`)
+- Symlink-aware hook analysis (grep follows symlinks)
+- `shlex.split` for hook command path extraction
+- PostToolUse hook loop with `break` for multi-settings-file iteration
+
 ## v2.5.3 — Field Tested Round 4 (5 fixes)
 
 Четвёртый раунд на 3 проектах. Баги всё тоньше — монорепо edge cases и exit code propagation.
