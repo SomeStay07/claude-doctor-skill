@@ -85,7 +85,7 @@ else
     echo "     Без миграций: ALTER TABLE вручную → потеря данных, невоспроизводимость"
     # Подсказки по стеку:
     if [ -n "$src_dirs" ]; then
-      grep -rq "sqlalchemy\|alembic" "$src_dirs" 2>/dev/null && echo "     → alembic init alembic"
+      grep -rqE "sqlalchemy|alembic" "$src_dirs" 2>/dev/null && echo "     → alembic init alembic"
       grep -rq "prisma" "$src_dirs" 2>/dev/null && echo "     → npx prisma migrate dev"
       grep -rq "knex" "$src_dirs" 2>/dev/null && echo "     → npx knex migrate:make init"
       grep -rq "drizzle" "$src_dirs" 2>/dev/null && echo "     → npx drizzle-kit generate"
