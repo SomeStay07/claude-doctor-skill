@@ -257,7 +257,7 @@ if [ -f package.json ]; then
     [ -d "$d" ] && src_dirs="${src_dirs:+$src_dirs }$d"
   done
   if [ -n "$src_dirs" ]; then
-    console_count=$(grep -rnE "console\.(log|info|warn|error)" --include="*.ts" --include="*.js" $src_dirs 2>/dev/null | grep -v "test" | grep -v "spec" | wc -l | tr -d ' ')
+    console_count=$(grep -rnE "console\.(log|info|warn|error)" --include="*.ts" --include="*.js" --exclude-dir=test --exclude-dir=tests --exclude-dir=__tests__ --exclude-dir=spec $src_dirs 2>/dev/null | wc -l | tr -d ' ')
     if [ "$console_count" -gt 10 ]; then
       echo "  🟠 $console_count console.* calls in production code"
       echo "     → Используй winston/pino вместо console.log"

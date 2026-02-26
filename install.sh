@@ -29,7 +29,6 @@ fi
 
 # Create directories
 mkdir -p "$DIR/layers"
-installed_files=0
 
 # Download main files
 echo -e "  Downloading main files..."

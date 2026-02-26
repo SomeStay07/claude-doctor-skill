@@ -29,7 +29,7 @@ try:
     for name in servers: print(f'  📡 {name}')
     if not servers: print('  ⚠️ mcpServers is empty')
 except Exception as e: print(f'  ❌ Failed to parse .mcp.json: {e}')
-"
+" 2>/dev/null
   # Check for hardcoded secrets in args:
   has_secrets=false
   for pat in 'args.*password' 'args.*token' 'args.*secret' 'args.*api[_.-]key'; do
