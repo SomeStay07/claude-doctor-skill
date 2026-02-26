@@ -200,6 +200,8 @@ hooks: ## Install git hooks (symlinks to scripts/)
 
 Symlinks лучше копий: обновил `scripts/pre-commit.sh` → хук автоматически обновился.
 
+> https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks
+
 ---
 
 ## 5g. Оптимизация скиллов — `disable-model-invocation` (~10 мин) [quality]

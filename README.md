@@ -437,17 +437,20 @@ An audit isn't done until:
 
 ```
 claude-doctor-skill/
-├── SKILL.md           — Main skill file (entry point for Claude Code)
-├── CHECKLIST.md       — Index of all 42 checks across 6 layers
+├── SKILL.md             — Brain: protocol, subcommands (< 250 lines)
+├── GUARDRAILS.md        — Output format, error recovery, self-check
+├── CHECKLIST.md         — Index of all 42 checks across 6 layers
 ├── layers/
-│   ├── SECURITY.md      — Layer 0: 11 security checks + incident response
-│   ├── FOUNDATION.md    — Layer 1: 5 foundation checks
-│   ├── QUALITY.md       — Layer 2: 7 core quality gate checks
-│   ├── QUALITY-EXTRA.md — Layer 2: 4 advanced quality checks
-│   ├── INTELLIGENCE.md  — Layer 3: 2 agent intelligence checks
-│   ├── CONTEXT.md       — Layer 4: 5 context & memory checks
-│   ├── DX.md            — Layer 5: 7 developer experience checks
-│   └── MATURITY.md      — Adaptive scoring: maturity detection + weights
+│   ├── SECURITY.md        — Layer 0: core security (0a-0i)
+│   ├── SECURITY-EXTRA.md  — Layer 0: advanced security (0j-0k + incident)
+│   ├── FOUNDATION.md      — Layer 1: 6 foundation checks
+│   ├── QUALITY.md         — Layer 2: 6 core quality checks
+│   ├── QUALITY-EXTRA.md   — Layer 2: 5 advanced quality checks
+│   ├── INTELLIGENCE.md    — Layer 3: 2 agent intelligence checks
+│   ├── CONTEXT.md         — Layer 4: 5 context & memory checks
+│   ├── DX.md              — Layer 5: core DX (5a-5d)
+│   ├── DX-EXTRA.md        — Layer 5: advanced DX (5e-5g)
+│   └── MATURITY.md        — Adaptive scoring: maturity detection + weights
 ├── assets/
 │   ├── logo.svg         — Doctor logo
 │   ├── demo-scan.gif    — Animated demo: /doctor scan

@@ -173,6 +173,8 @@ git ls-files | grep -iE \
 | `.htpasswd` | Хэшированные пароли | Apache |
 | `docker-compose.override.yml` | Локальные переопределения секретов | Docker |
 
+> https://blog.gitguardian.com/secrets-in-source-code-redux/
+
 ---
 
 ## 0d. .gitignore покрывает ВСЕ категории (~2 мин) [core]
@@ -188,31 +190,17 @@ git ls-files | grep -iE \
 - [ ] **Дампы БД**: `*.sql`, `*.dump`, `*.sql.gz` (если в проекте есть скрипты дампов)
 
 ```bash
-# Check all categories:
-echo "=== Secrets ==="
-for p in ".env" "*.pem" "*.key" ".mcp.json" "*.tfstate"; do
-  grep -qF "$p" .gitignore 2>/dev/null && echo "  ✅ $p" || echo "  ⚠️ MISSING: $p"
-done
-
-echo "=== Claude Code ==="
-for p in ".mcp.json" "CLAUDE.local.md" ".claude/settings.local.json"; do
-  grep -qF "$p" .gitignore 2>/dev/null && echo "  ✅ $p" || echo "  ⚠️ MISSING: $p"
-done
-
-echo "=== Runtime (stack-aware) ==="
-[[ -f requirements.txt || -f pyproject.toml ]] && for p in "__pycache__/" ".venv/" "*.pyc"; do
-  grep -qF "$p" .gitignore 2>/dev/null && echo "  ✅ $p" || echo "  ⚠️ MISSING: $p"
-done
-[[ -f package.json ]] && for p in "node_modules" "dist/"; do
-  grep -q "$p" .gitignore 2>/dev/null && echo "  ✅ $p" || echo "  ⚠️ MISSING: $p"
-done
-[[ -f Cargo.toml ]] && { grep -qF "target/" .gitignore 2>/dev/null && echo "  ✅ target/" || echo "  ⚠️ MISSING: target/"; }
-
-echo "=== IDE ==="
-for p in ".idea/" ".vscode/"; do
-  grep -qF "$p" .gitignore 2>/dev/null && echo "  ✅ $p" || echo "  ⚠️ MISSING: $p"
-done
+check_gi() { grep -qF "$1" .gitignore 2>/dev/null && echo "  ✅ $1" || echo "  ⚠️ MISSING: $1"; }
+echo "=== Secrets ===" && for p in ".env" "*.pem" "*.key" ".mcp.json" "*.tfstate"; do check_gi "$p"; done
+echo "=== Claude Code ===" && for p in ".mcp.json" "CLAUDE.local.md" ".claude/settings.local.json"; do check_gi "$p"; done
+echo "=== Runtime ==="
+[[ -f requirements.txt || -f pyproject.toml ]] && for p in "__pycache__/" ".venv/" "*.pyc"; do check_gi "$p"; done
+[[ -f package.json ]] && for p in "node_modules" "dist/"; do check_gi "$p"; done
+[[ -f Cargo.toml ]] && check_gi "target/"
+echo "=== IDE ===" && for p in ".idea/" ".vscode/"; do check_gi "$p"; done
 ```
+
+> https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
 ---
 
@@ -266,6 +254,8 @@ grep -rn -E "^export[[:space:]]+[A-Z_]*(KEY|SECRET|TOKEN|PASSWORD|CREDENTIAL)[[:
 
 **Ограничение grep**: ловит только по ключевым словам. Пропускает строки с высокой энтропией, Base64-закодированные секреты и нестандартные имена. Всегда используй gitleaks, если он доступен.
 
+> https://owasp.org/www-community/vulnerabilities/Use_of_hard-coded_password
+
 ---
 
 ## 0f. .env.example — документация и синхронизация (~2 мин) [core]
@@ -306,6 +296,8 @@ diff <(grep -E '^#?[[:space:]]*[A-Z_]+=' .env.example | sed 's/^#[[:space:]]*//'
      <(grep -E '^[A-Z_]+=' .env | sed 's/=.*//' | sort -u) 2>/dev/null | grep "^>" | sed 's/^> /  /'
 ```
 
+> https://12factor.net/config
+
 ---
 
 ## 0g. Права доступа к файлам (~5 мин) [advanced]
@@ -318,6 +310,8 @@ diff <(grep -E '^#?[[:space:]]*[A-Z_]+=' .env.example | sed 's/^#[[:space:]]*//'
 ls -la .env .mcp.json *.pem *.key 2>/dev/null
 # Fix: chmod 600 .env .mcp.json
 ```
+
+> https://en.wikipedia.org/wiki/File-system_permissions
 
 ---
 
@@ -338,6 +332,8 @@ govulncheck ./... 2>/dev/null || echo "Install: go install golang.org/x/vuln/cmd
 # Rust:
 cargo audit 2>/dev/null || echo "Install: cargo install cargo-audit"
 ```
+
+> https://owasp.org/Top10/A06_2021-Vulnerable_and_Outdated_Components/
 
 ---
 
@@ -393,6 +389,8 @@ jobs:
 - [ ] **GitHub secret scanning включён** — в настройках репо Settings → Code security → Secret scanning
 
 GitHub автоматически определяет токены от 200+ провайдеров (AWS, GCP, Stripe и т.д.) и оповещает или блокирует push.
+
+> https://docs.gitleaks.io/
 
 ---
 
