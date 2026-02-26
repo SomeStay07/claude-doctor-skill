@@ -10,7 +10,7 @@
 <!-- glossary: CLAUDE.md = файл с инструкциями для Claude Code — описание проекта, команды, правила -->
 
 - [ ] **Существует** — `CLAUDE.md` в корне проекта
-- [ ] **Адекватный размер** — до 300 строк (идеал: 60-150). Больше 300 = инструкции теряются в шуме
+- [ ] **Адекватный размер** — до 300 строк для обычных проектов (идеал: 60-150). Монорепо с .claude/rules/: до 800 строк допустимо
 - [ ] **Есть ключевые разделы** — Quick Start, Architecture, Critical Rules, Known Issues
 - [ ] **Команды готовы к копированию** — блоки кода с реальными командами, а не описания
 - [ ] **Нет антипаттернов** — нет правил стиля кода (это работа линтера), нет общих знаний, которые Claude и так знает
@@ -32,15 +32,15 @@ done
 code_blocks=$(grep -c '```' CLAUDE.md 2>/dev/null); code_blocks=${code_blocks:-0}
 echo "Code blocks: $((code_blocks / 2))"
 
-# Антипаттерн: слишком много строк = раздутый файл
+# Адаптивный порог: монорепо/complex проекты → допускается больше строк
 lines=$(wc -l < CLAUDE.md 2>/dev/null || echo 0)
-if [[ $lines -gt 500 ]]; then
-  echo "🔴 BLOATED: $lines lines — split into sub-files or CLAUDE.md per directory"
-elif [[ $lines -gt 300 ]]; then
-  echo "🟠 LONG: $lines lines — consider trimming non-essential content"
-elif [[ $lines -gt 0 ]]; then
-  echo "✅ SIZE OK: $lines lines"
-fi
+svc_count=$(find . -maxdepth 3 -name "package.json" -not -path "*/node_modules/*" 2>/dev/null | wc -l | tr -d ' ')
+rules_count=$([ -d .claude/rules ] && find .claude/rules -name "*.md" 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+if [ "$svc_count" -gt 5 ] || [ "$rules_count" -gt 3 ]; then max_ok=800; max_long=1200
+else max_ok=300; max_long=500; fi
+if [ "$lines" -gt "$max_long" ]; then echo "🔴 BLOATED: $lines lines (max $max_long) — split into sub-files"
+elif [ "$lines" -gt "$max_ok" ]; then echo "🟠 LONG: $lines lines (recommended <$max_ok) — consider trimming"
+elif [ "$lines" -gt 0 ]; then echo "✅ SIZE OK: $lines lines"; fi
 ```
 
 ### Как выглядит хороший CLAUDE.md

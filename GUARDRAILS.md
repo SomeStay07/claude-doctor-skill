@@ -91,6 +91,10 @@
 - Нет `package-lock.json` если используется pnpm (`pnpm-lock.yaml`) или bun (`bun.lockb`)
 - Нет `.git/hooks/pre-commit` если используется husky (`.husky/` directory)
 - Нет единого корневого `package.json` в монорепах с `packages/` или `apps/`
+- Нет notification hook если используется внешний инструмент мониторинга (Conductor, tmux, screen) — 🔵 max
+- Нет `install-hooks.sh` если используется Husky (`.husky/` + `prepare` script) или Lefthook
+- `.pub` файлы (SSH public keys) в git — публичные ключи НЕ секреты
+- CLAUDE.md > 300 строк в монорепо с 5+ сервисами и `.claude/rules/` — допустимо до 800
 - Пустые слои 3-4 (Intelligence/Context) у Starter/Growing — это нормально, не ошибка.
   Эти слои проверяют продвинутые паттерны, которые появляются на поздних стадиях.
 

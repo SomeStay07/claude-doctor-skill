@@ -118,49 +118,40 @@ Git hooks живут в `.git/hooks/` — они НЕ коммитятся. Но
 ```bash
 echo "=== Hook installer ==="
 
+# Husky/lefthook auto-install — install-hooks.sh не нужен
+if [ -d .husky ] || ([ -f package.json ] && grep -qE '"prepare"\s*:\s*"husky"' package.json 2>/dev/null); then
+  echo "  ✅ Husky detected — hooks auto-install via 'pnpm/npm install'"
+elif [ -f lefthook.yml ] || [ -f .lefthook.yml ]; then
+  echo "  ✅ Lefthook detected — hooks auto-install"
+else
+
 # Check for committable hook scripts:
 hook_scripts=0
 for f in scripts/pre-commit.sh scripts/pre-commit scripts/pre-push.sh scripts/pre-push hooks/pre-commit.sh hooks/pre-push.sh; do
-  if [ -f "$f" ]; then
-    hook_scripts=$((hook_scripts + 1))
-    echo "  ✅ $f (committable)"
-  fi
+  if [ -f "$f" ]; then hook_scripts=$((hook_scripts + 1)); echo "  ✅ $f (committable)"; fi
 done
-
 if [ "$hook_scripts" -eq 0 ]; then
-  # Check if hooks exist but only in .git/hooks/
   git_hooks=0
   [ -f .git/hooks/pre-commit ] && [ ! -L .git/hooks/pre-commit ] && git_hooks=$((git_hooks + 1))
   [ -f .git/hooks/pre-push ] && [ ! -L .git/hooks/pre-push ] && git_hooks=$((git_hooks + 1))
   if [ "$git_hooks" -gt 0 ]; then
     echo "  🟠 $git_hooks hooks in .git/hooks/ but NOT in scripts/ — не коммитятся!"
-    echo "     → Перемести в scripts/ и создай symlinks"
-  else
-    echo "  ⚠️ No committable hook scripts"
-  fi
+  else echo "  ⚠️ No committable hook scripts"; fi
 fi
 
 # Check for install script:
 install_found=false
 for f in scripts/install-hooks.sh scripts/setup-hooks.sh scripts/install-hooks; do
-  if [ -f "$f" ]; then
-    install_found=true
-    echo "  ✅ $f"
-    break
-  fi
+  [ -f "$f" ] && { install_found=true; echo "  ✅ $f"; break; }
 done
-if [ "$install_found" = false ]; then
-  echo "  ⚠️ No install-hooks script"
-fi
+if [ "$install_found" = false ]; then echo "  ⚠️ No install-hooks script"; fi
 
 # Check for Makefile target:
 if [ -f Makefile ]; then
-  if grep -qE '^hooks:' Makefile 2>/dev/null; then
-    echo "  ✅ make hooks target"
-  else
-    echo "  ⚠️ No 'make hooks' target — новый разработчик не найдёт установку"
-  fi
+  grep -qE '^hooks:' Makefile 2>/dev/null && echo "  ✅ make hooks target" || echo "  ⚠️ No 'make hooks' target"
 fi
+
+fi  # end non-husky branch
 
 # Check symlinks (best practice):
 for hook in pre-commit pre-push; do

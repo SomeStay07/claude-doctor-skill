@@ -1,5 +1,27 @@
 # Changelog
 
+## v3.0.1 — Feedback Fixes (7 improvements from real-world usage)
+
+Фиксы на основе фидбека от реального запуска Доктора на production монорепо.
+
+### False positive fixes
+- `.pub` файлы (SSH public keys) не считаются секретами — исключены из 0c (SECURITY.md)
+- `install-hooks.sh` не требуется при Husky/Lefthook с `prepare` скриптом (DX-EXTRA.md)
+- CLAUDE.md > 300 строк допустим для монорепо с 5+ сервисами и `.claude/rules/` — адаптивный порог (FOUNDATION.md)
+- Notification hook — 🔵 max если внешний мониторинг (Conductor/tmux) (GUARDRAILS.md)
+
+### Severity adjustments
+- SAST 🟠→🟡 при наличии кастомных security rules (`.claude/rules/security.md`, leak validators) (SECURITY.md)
+- PostToolUse ⚠️→🔵 при наличии PreToolUse hooks (QUALITY.md)
+
+### Count accuracy
+- `console.log` count исключает DEV-guarded строки (`import.meta.env.DEV`, `isDev`, `__DEV__`) (QUALITY-EXTRA.md)
+- NestJS `@nestjs/common` учитывается как structured logging (QUALITY-EXTRA.md)
+
+### Updated
+- install.sh: version 3.0.1
+- GUARDRAILS.md: 4 новых false positive правила
+
 ## v3.0.0 — Stable Release
 
 Doctor is field-tested and production-ready. 89 bugs found and fixed across 4 rounds of real-world testing on 3 projects (Python/Docker, Python/Makefile, Swift/iOS).

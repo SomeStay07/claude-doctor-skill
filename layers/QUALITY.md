@@ -109,7 +109,10 @@ for settings_file in .claude/settings.local.json .claude/settings.json; do
 done
 if [ "$post_hook_found" = false ]; then
   if [ -f .claude/settings.local.json ] || [ -f .claude/settings.json ]; then
-    echo "  ⚠️ No PostToolUse hook"
+    # Lower severity if PreToolUse exists (partial coverage already)
+    has_pre=$(grep -l "PreToolUse" .claude/settings.local.json .claude/settings.json 2>/dev/null)
+    if [ -n "$has_pre" ]; then echo "  🔵 No PostToolUse hook (PreToolUse exists — partial coverage)"
+    else echo "  ⚠️ No PostToolUse hook"; fi
   else echo "  ❌ No .claude/settings.json"; fi
 fi
 

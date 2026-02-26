@@ -123,8 +123,17 @@ if [ -f .pre-commit-config.yaml ]; then
   fi
 fi
 
+# Check for custom security rules (reduces severity):
+custom_sec=false
+[ -f .claude/rules/security.md ] && custom_sec=true
+find . -maxdepth 3 -name "*security*rule*" -o -name "*leak*rule*" 2>/dev/null | grep -q . && custom_sec=true
 if [ "$sast_found" = false ] && [ "$sast_in_ci" = false ]; then
-  echo "  🟠 No SAST нигде — уязвимости попадают в production без проверки"
+  if [ "$custom_sec" = true ]; then
+    echo "  🟡 No standard SAST, but custom security rules found"
+    echo "     eslint-plugin-security ловит другой класс: eval, ReDoS, child_process"
+  else
+    echo "  🟠 No SAST нигде — уязвимости попадают в production без проверки"
+  fi
 fi
 ```
 
@@ -143,16 +152,16 @@ fi
 
 ## 0c. Секретные файлы не в git (~2 мин) [core]
 
-- [ ] **`.env` не отслеживается** — `git ls-files .env` должен вернуть пустой результат
-- [ ] **`.env` никогда не был в git** — `git log --all --diff-filter=A -- .env` должен вернуть пустой результат
-- [ ] **`.mcp.json` не отслеживается** — часто содержит строки подключения к БД, API-ключи в блоках `"env"`
+- [ ] **`.env` не отслеживается** — `git ls-files .env` = пустой результат
+- [ ] **`.env` никогда не был в git** — `git log --all --diff-filter=A -- .env` = пустой
+- [ ] **`.mcp.json` не отслеживается** — содержит строки подключения, API-ключи
 - [ ] **Нет других секретных файлов в git**:
 
 ```bash
 # Check for ANY sensitive files in git:
 git ls-files | grep -iE \
   '\.env|\.pem|\.key|\.p12|\.pfx|\.jks|id_rsa|id_ed25519|credentials|secret|\.pypirc|\.npmrc|\.tfstate|\.sql\.gz|\.dump' \
-  2>/dev/null | grep -vE '\.(example|sample|template)$'
+  2>/dev/null | grep -vE '\.(example|sample|template|pub)$'
 ```
 
 ### Типичные секретные файлы по экосистемам
@@ -165,7 +174,7 @@ git ls-files | grep -iE \
 | `.pypirc` | Учётные данные для загрузки в PyPI | Python |
 | `terraform.tfstate` | ВСЕ секреты инфраструктуры в открытом виде | Terraform/IaC |
 | `*.sql`, `*.dump`, `*.sql.gz` | Дампы БД с реальными данными пользователей | Любая с БД |
-| `id_rsa`, `id_ed25519`, `*.pem`, `*.key` | Приватные ключи SSH/TLS | Любая |
+| `id_rsa`, `id_ed25519`, `*.pem`, `*.key` | Приватные ключи SSH/TLS (НЕ `.pub` — публичные ключи не секреты) | Любая |
 | `credentials.json`, `service-account*.json` | Сервисные аккаунты GCP/Firebase | Google Cloud |
 | `application.properties`, `application.yml` | Пароли БД, API-ключи | Java/Spring |
 | `wp-config.php` | Учётные данные БД, ключи аутентификации | WordPress |
@@ -205,12 +214,10 @@ echo "=== IDE ===" && for p in ".idea/" ".vscode/"; do check_gi "$p"; done
 
 ## 0e. Нет захардкоженных секретов в исходном коде (~5 мин) [core]
 
-- [ ] **Исходники чистые** — нет API-ключей, токенов, паролей в виде строковых литералов
-- [ ] **Конфиги чистые** — `docker-compose.yml`, `config.yaml`, `config.json` используют env-переменные, а не реальные значения
-- [ ] **CI workflows чистые** — `.github/workflows/*.yml` используют `${{ secrets.* }}`, а не захардкоженные токены
-- [ ] **Dockerfile чистые** — нет `ENV API_KEY=real_value` или `COPY .env`
-- [ ] **Ноутбуки чистые** — `.ipynb` файлы не содержат API-ключей в выходных данных ячеек
-- [ ] **Shell-скрипты чистые** — нет `export API_KEY="real_value"` в `.sh` файлах
+- [ ] **Исходники чистые** — нет API-ключей, токенов, паролей как строковых литералов
+- [ ] **Конфиги чистые** — docker-compose/config.yaml используют env-переменные
+- [ ] **CI workflows чистые** — `${{ secrets.* }}`, не захардкоженные токены
+- [ ] **Dockerfile/scripts/notebooks чистые** — нет hardcoded секретов
 
 ### Варианты сканирования (выбери один)
 
@@ -227,9 +234,9 @@ gitleaks detect --source . --verbose
 gitleaks detect --source . --no-git --verbose
 ```
 
-gitleaks намного лучше grep — он определяет секреты по энтропии (случайности), а не только по совпадению ключевых слов. Он ловит Base64-закодированные ключи, строки с высокой энтропией и 800+ известных паттернов секретов (AWS, GCP, Stripe, GitHub токены и т.д.).
+gitleaks лучше grep — определяет секреты по энтропии + 800+ паттернов (AWS, GCP, Stripe и т.д.).
 
-**Вариант B: grep (запасной вариант, если gitleaks недоступен):**
+**Вариант B: grep (если gitleaks недоступен):**
 ```bash
 # Scan source code for hardcoded secrets (string assignments 8+ chars):
 grep -rn -E "(api_key|secret|password|token|bearer|credential|auth_token|private_key)[[:space:]]*[:=][[:space:]]*['\"][A-Za-z0-9+/=_\-]{8,}" \
@@ -251,7 +258,7 @@ grep -rn -E "^export[[:space:]]+[A-Z_]*(KEY|SECRET|TOKEN|PASSWORD|CREDENTIAL)[[:
   --include="*.sh" --include="*.bash" . 2>/dev/null
 ```
 
-**Ограничение grep**: ловит только по ключевым словам. Пропускает строки с высокой энтропией, Base64-закодированные секреты и нестандартные имена. Всегда используй gitleaks, если он доступен.
+**Ограничение grep**: ловит только по ключевым словам, пропускает Base64 и high-entropy строки.
 
 > https://owasp.org/www-community/vulnerabilities/Use_of_hard-coded_password
 
@@ -342,11 +349,10 @@ cargo audit 2>/dev/null || true  # Rust
 <!-- glossary: gitleaks = утилита, сканирующая git-историю на случайно закоммиченные пароли и ключи -->
 <!-- glossary: pre-commit hook = скрипт, который автоматически запускается перед каждым git commit -->
 
-Секреты утекают потому что люди ошибаются. Одного уровня защиты недостаточно — используй несколько:
+Одного уровня защиты недостаточно — используй несколько:
 
-### Уровень 1: Pre-commit hook (локально, блокирует перед коммитом)
-
-- [ ] **gitleaks / detect-secrets / trufflehog настроен** как pre-commit hook
+### Уровень 1: Pre-commit hook (локально)
+- [ ] **gitleaks / detect-secrets / trufflehog** как pre-commit hook
 
 ```bash
 # Install gitleaks:
@@ -361,11 +367,10 @@ gitleaks detect --source . --verbose
 # paths = ["tests/", ".env.example"]
 ```
 
-**Проблема**: разработчики могут обойти через `git commit --no-verify`.
+**Проблема**: разработчики могут обойти через `--no-verify`.
 
-### Уровень 2: CI-сканирование секретов (удалённо, ловит обходы)
-
-- [ ] **CI-пайплайн включает сканирование секретов** — ловит то, что pre-commit пропустил
+### Уровень 2: CI-сканирование секретов (ловит обходы)
+- [ ] **CI-пайплайн включает сканирование секретов**
 
 ```yaml
 # .github/workflows/security.yml
@@ -383,13 +388,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-Это ловит секреты даже когда разработчики используют `--no-verify`.
+### Уровень 3: GitHub secret scanning (алерты при push)
+- [ ] **GitHub secret scanning включён** — Settings → Code security → Secret scanning
 
-### Уровень 3: GitHub secret scanning (на уровне платформы, алерты при push)
-
-- [ ] **GitHub secret scanning включён** — в настройках репо Settings → Code security → Secret scanning
-
-GitHub автоматически определяет токены от 200+ провайдеров (AWS, GCP, Stripe и т.д.) и оповещает или блокирует push.
+GitHub определяет токены от 200+ провайдеров и оповещает или блокирует push.
 
 > https://docs.gitleaks.io/
 

@@ -257,7 +257,7 @@ if [ -f package.json ]; then
     [ -d "$d" ] && src_dirs="${src_dirs:+$src_dirs }$d"
   done
   if [ -n "$src_dirs" ]; then
-    console_count=$(grep -rnE "console\.(log|info|warn|error)" --include="*.ts" --include="*.js" --exclude-dir=test --exclude-dir=tests --exclude-dir=__tests__ --exclude-dir=spec $src_dirs 2>/dev/null | wc -l | tr -d ' ')
+    console_count=$(grep -rnE "console\.(log|info|warn|error)" --include="*.ts" --include="*.js" --exclude-dir=test --exclude-dir=tests --exclude-dir=__tests__ --exclude-dir=spec $src_dirs 2>/dev/null | grep -vE "import\.meta\.env\.(DEV|MODE)|process\.env\.NODE_ENV|isDev|__DEV__" | wc -l | tr -d ' ')
     if [ "$console_count" -gt 10 ]; then
       echo "  🟠 $console_count console.* calls in production code"
       echo "     → Используй winston/pino вместо console.log"
@@ -267,8 +267,8 @@ if [ -f package.json ]; then
       echo "  ✅ No console.log in production code"
     fi
 
-    # Check for structured logging:
-    if grep -qE '"winston"|"pino"|"bunyan"|"log4js"' package.json 2>/dev/null; then
+    # Check for structured logging (NestJS Logger, winston, pino):
+    if grep -qE '"winston"|"pino"|"bunyan"|"log4js"|"@nestjs/common"' package.json 2>/dev/null; then
       echo "  ✅ Structured logging library found"
     fi
   fi
