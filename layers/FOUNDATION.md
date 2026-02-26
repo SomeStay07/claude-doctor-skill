@@ -6,7 +6,7 @@
 
 ---
 
-## 1a. CLAUDE.md — инструкции для Claude [core]
+## 1a. CLAUDE.md — инструкции для Claude (~15 мин) [core]
 <!-- glossary: CLAUDE.md = файл с инструкциями для Claude Code — описание проекта, команды, правила -->
 
 - [ ] **Существует** — `CLAUDE.md` в корне проекта
@@ -68,7 +68,7 @@ fi
 
 ---
 
-## 1b. Файл зависимостей — стек зафиксирован [core]
+## 1b. Файл зависимостей — стек зафиксирован (~2 мин) [core]
 
 - [ ] **Существует** — манифест для стека проекта (см. таблицу ниже)
 - [ ] **Не пустой** — содержит реальные зависимости (не пустой файл)
@@ -80,201 +80,71 @@ fi
 echo "=== Dependency manifest ==="
 manifest_found=false
 
-# Python?
-for f in requirements.txt pyproject.toml setup.py setup.cfg; do
-  if [ -f "$f" ]; then
+# --- Простые файлы (проверка наличия) ---
+for entry in \
+  "requirements.txt|Python" "pyproject.toml|Python" "setup.py|Python" "setup.cfg|Python" \
+  "package.json|Node.js" "Cargo.toml|Rust" "go.mod|Go" "Package.swift|Swift" \
+  "Podfile|CocoaPods" "Gemfile|Ruby" "pom.xml|Java/Kotlin" "build.gradle|Java/Kotlin" \
+  "build.gradle.kts|Java/Kotlin" "composer.json|PHP" "mix.exs|Elixir" \
+  "pubspec.yaml|Dart/Flutter" "CMakeLists.txt|C/C++" "meson.build|C/C++" \
+  "conanfile.txt|C/C++" "conanfile.py|C/C++" "build.sbt|Scala" "stack.yaml|Haskell" \
+  "build.zig|Zig" "project.clj|Clojure" "deps.edn|Clojure" \
+  "Makefile.PL|Perl" "cpanfile|Perl"; do
+  file="${entry%%|*}"; label="${entry#*|}"
+  if [ -f "$file" ]; then
     manifest_found=true
-    deps=$(grep -cvE '^\s*$|^\s*#' "$f" 2>/dev/null || echo 0)
-    echo "  ✅ $f ($deps non-empty lines)"
+    if [ "$file" = "package.json" ]; then
+      dep_count=$(node -p "try{const p=require('./package.json');Object.keys(p.dependencies||{}).length+Object.keys(p.devDependencies||{}).length}catch(e){0}" 2>/dev/null || echo "?")
+      echo "  ✅ $file ($dep_count dependencies)"
+    else
+      deps=$(grep -cvE '^\s*$|^\s*#' "$file" 2>/dev/null || echo 0)
+      echo "  ✅ $file ($deps non-empty lines)"
+    fi
   fi
 done
 
-# Node.js?
-if [ -f package.json ]; then
-  manifest_found=true
-  dep_count=$(python3 -c "
-import json
-d = json.load(open('package.json'))
-print(len(d.get('dependencies', {})) + len(d.get('devDependencies', {})))
-" 2>/dev/null || echo 0)
-  echo "  ✅ package.json ($dep_count dependencies)"
-fi
-
-# Rust?
-if [ -f Cargo.toml ]; then
-  manifest_found=true
-  echo "  ✅ Cargo.toml"
-fi
-
-# Go?
-if [ -f go.mod ]; then
-  manifest_found=true
-  echo "  ✅ go.mod"
-fi
-
-# Swift?
-if [ -f Package.swift ]; then
-  manifest_found=true
-  echo "  ✅ Package.swift (Swift Package Manager)"
-fi
-xcodeproj=$(find . -maxdepth 2 -name "*.xcodeproj" -type d 2>/dev/null | head -1)
-if [ -n "$xcodeproj" ]; then
-  manifest_found=true
-  echo "  ✅ $xcodeproj (Xcode project)"
-fi
-if [ -f Podfile ]; then
-  manifest_found=true
-  echo "  ✅ Podfile (CocoaPods)"
-fi
-
-# Ruby?
-if [ -f Gemfile ]; then
-  manifest_found=true
-  echo "  ✅ Gemfile"
-fi
-
-# Java/Kotlin?
-for f in pom.xml build.gradle build.gradle.kts; do
-  if [ -f "$f" ]; then
+# --- Глубокий поиск (find) ---
+for entry in "*.xcodeproj|d|2|Xcode project" "*.csproj|f|3|.NET project" "*.sln|f|2|.NET solution" "*.cabal|f|2|Haskell/Cabal"; do
+  pat="${entry%%|*}"; rest="${entry#*|}"; ftype="${rest%%|*}"; rest="${rest#*|}"
+  depth="${rest%%|*}"; label="${rest#*|}"
+  match=$(find . -maxdepth "$depth" -name "$pat" -type "$ftype" 2>/dev/null | head -1)
+  if [ -n "$match" ]; then
     manifest_found=true
-    echo "  ✅ $f"
+    echo "  ✅ $match ($label)"
   fi
 done
 
-# PHP?
-if [ -f composer.json ]; then
-  manifest_found=true
-  echo "  ✅ composer.json"
-fi
-
-# Elixir?
-if [ -f mix.exs ]; then
-  manifest_found=true
-  echo "  ✅ mix.exs"
-fi
-
-# Dart/Flutter?
-if [ -f pubspec.yaml ]; then
-  manifest_found=true
-  echo "  ✅ pubspec.yaml"
-fi
-
-# C/C++?
-for f in CMakeLists.txt meson.build conanfile.txt conanfile.py; do
-  if [ -f "$f" ]; then
-    manifest_found=true
-    echo "  ✅ $f"
-  fi
-done
-
-# C# / .NET?
-csproj=$(find . -maxdepth 3 -name "*.csproj" -type f 2>/dev/null | head -1)
-if [ -n "$csproj" ]; then
-  manifest_found=true
-  echo "  ✅ $csproj (.NET project)"
-fi
-sln=$(find . -maxdepth 2 -name "*.sln" -type f 2>/dev/null | head -1)
-if [ -n "$sln" ]; then
-  manifest_found=true
-  echo "  ✅ $sln (.NET solution)"
-fi
-
-# Scala?
-if [ -f build.sbt ]; then
-  manifest_found=true
-  echo "  ✅ build.sbt (Scala/sbt)"
-fi
-
-# Haskell?
-cabal=$(find . -maxdepth 2 -name "*.cabal" -type f 2>/dev/null | head -1)
-if [ -n "$cabal" ]; then
-  manifest_found=true
-  echo "  ✅ $cabal (Haskell/Cabal)"
-fi
-if [ -f stack.yaml ]; then
-  manifest_found=true
-  echo "  ✅ stack.yaml (Haskell Stack)"
-fi
-
-# Zig?
-if [ -f build.zig ]; then
-  manifest_found=true
-  echo "  ✅ build.zig"
-fi
-
-# Clojure?
-for f in project.clj deps.edn; do
-  if [ -f "$f" ]; then
-    manifest_found=true
-    echo "  ✅ $f (Clojure)"
-  fi
-done
-
-# Perl?
-for f in Makefile.PL cpanfile; do
-  if [ -f "$f" ]; then
-    manifest_found=true
-    echo "  ✅ $f (Perl)"
-  fi
-done
-
-# R?
+# --- R (особая проверка) ---
 if [ -f DESCRIPTION ]; then
-  grep -q "Package:" DESCRIPTION 2>/dev/null && {
-    manifest_found=true
-    echo "  ✅ DESCRIPTION (R package)"
-  }
+  grep -q "Package:" DESCRIPTION 2>/dev/null && { manifest_found=true; echo "  ✅ DESCRIPTION (R package)"; }
 fi
 
 if [ "$manifest_found" = false ]; then
-  # Проверить, есть ли исходный код без манифеста:
   src_dirs=""
   for d in bot src app lib Sources; do
-    if [ -d "$d" ]; then
-      if [ -z "$src_dirs" ]; then src_dirs="$d"; else src_dirs="$src_dirs $d"; fi
-    fi
+    [ -d "$d" ] && src_dirs="$src_dirs $d"
   done
   if [ -n "$src_dirs" ]; then
-    echo "  🔴 Source code exists ($src_dirs/) but NO dependency manifest!"
+    echo "  🔴 Source code exists ($src_dirs) but NO dependency manifest!"
     echo "     → Другой разработчик (и Claude) не знает какие пакеты нужны"
-    echo "     → Зависимости невоспроизводимы на другой машине"
     # Подсказка на основе обнаруженного языка:
-    py_count=$(find $src_dirs -name "*.py" 2>/dev/null | wc -l | tr -d ' ')
-    js_count=$(find $src_dirs -name "*.js" -o -name "*.ts" 2>/dev/null | wc -l | tr -d ' ')
-    swift_count=$(find $src_dirs -name "*.swift" 2>/dev/null | wc -l | tr -d ' ')
-    go_count=$(find $src_dirs -name "*.go" 2>/dev/null | wc -l | tr -d ' ')
-    rs_count=$(find $src_dirs -name "*.rs" 2>/dev/null | wc -l | tr -d ' ')
-    rb_count=$(find $src_dirs -name "*.rb" 2>/dev/null | wc -l | tr -d ' ')
-    java_count=$(find $src_dirs -name "*.java" -o -name "*.kt" 2>/dev/null | wc -l | tr -d ' ')
-    [ "$py_count" -gt 0 ] && echo "     → Создай: pip freeze > requirements.txt"
-    [ "$js_count" -gt 0 ] && echo "     → Создай: npm init -y"
-    [ "$swift_count" -gt 0 ] && echo "     → Создай: swift package init"
-    [ "$go_count" -gt 0 ] && echo "     → Создай: go mod init <module>"
-    [ "$rs_count" -gt 0 ] && echo "     → Создай: cargo init"
-    [ "$rb_count" -gt 0 ] && echo "     → Создай: bundle init"
-    [ "$java_count" -gt 0 ] && echo "     → Создай: pom.xml или build.gradle"
-    c_count=$(find $src_dirs -name "*.c" -o -name "*.cpp" -o -name "*.cc" -o -name "*.h" 2>/dev/null | wc -l | tr -d ' ')
-    cs_count=$(find $src_dirs -name "*.cs" 2>/dev/null | wc -l | tr -d ' ')
-    scala_count=$(find $src_dirs -name "*.scala" 2>/dev/null | wc -l | tr -d ' ')
-    hs_count=$(find $src_dirs -name "*.hs" 2>/dev/null | wc -l | tr -d ' ')
-    zig_count=$(find $src_dirs -name "*.zig" 2>/dev/null | wc -l | tr -d ' ')
-    clj_count=$(find $src_dirs -name "*.clj" -o -name "*.cljs" 2>/dev/null | wc -l | tr -d ' ')
-    pl_count=$(find $src_dirs -name "*.pl" -o -name "*.pm" 2>/dev/null | wc -l | tr -d ' ')
-    r_count=$(find $src_dirs -name "*.R" -o -name "*.r" 2>/dev/null | wc -l | tr -d ' ')
-    php_count=$(find $src_dirs -name "*.php" 2>/dev/null | wc -l | tr -d ' ')
-    ex_count=$(find $src_dirs -name "*.ex" -o -name "*.exs" 2>/dev/null | wc -l | tr -d ' ')
-    dart_count=$(find $src_dirs -name "*.dart" 2>/dev/null | wc -l | tr -d ' ')
-    [ "$c_count" -gt 0 ] && echo "     → Создай: cmake_minimum_required(...) в CMakeLists.txt"
-    [ "$cs_count" -gt 0 ] && echo "     → Создай: dotnet new console (или classlib/web)"
-    [ "$scala_count" -gt 0 ] && echo "     → Создай: build.sbt"
-    [ "$hs_count" -gt 0 ] && echo "     → Создай: cabal init или stack init"
-    [ "$zig_count" -gt 0 ] && echo "     → Создай: zig init"
-    [ "$clj_count" -gt 0 ] && echo "     → Создай: deps.edn или lein new"
-    [ "$pl_count" -gt 0 ] && echo "     → Создай: cpanfile"
-    [ "$r_count" -gt 0 ] && echo "     → Создай: usethis::create_package()"
-    [ "$php_count" -gt 0 ] && echo "     → Создай: composer init"
-    [ "$ex_count" -gt 0 ] && echo "     → Создай: mix new <project>"
-    [ "$dart_count" -gt 0 ] && echo "     → Создай: dart create <project> или flutter create <project>"
+    for entry in \
+      "*.py|pip freeze > requirements.txt" "*.js *.ts|npm init -y" \
+      "*.swift|swift package init" "*.go|go mod init <module>" \
+      "*.rs|cargo init" "*.rb|bundle init" "*.java *.kt|pom.xml или build.gradle" \
+      "*.c *.cpp *.cc *.h|cmake_minimum_required(...) в CMakeLists.txt" \
+      "*.cs|dotnet new console" "*.scala|build.sbt" "*.hs|cabal init или stack init" \
+      "*.zig|zig init" "*.clj *.cljs|deps.edn или lein new" "*.pl *.pm|cpanfile" \
+      "*.R *.r|usethis::create_package()" "*.php|composer init" \
+      "*.ex *.exs|mix new <project>" "*.dart|dart create или flutter create"; do
+      globs="${entry%%|*}"; hint="${entry#*|}"
+      count=0
+      for g in $globs; do
+        c=$(find $src_dirs -name "$g" 2>/dev/null | wc -l | tr -d ' ')
+        count=$((count + c))
+      done
+      [ "$count" -gt 0 ] && echo "     → Создай: $hint"
+    done
   else
     echo "  🔵 No source code yet — manifest не нужен пока"
   fi
@@ -293,7 +163,7 @@ fi
 
 ---
 
-## 1c. Скрипты сборки — автоматизация [quality]
+## 1c. Скрипты сборки — автоматизация (~10 мин) [quality]
 
 - [ ] **Существует** — `Makefile` / `package.json` scripts / `justfile` / `taskfile.yml`
 - [ ] **Есть справка** — `make help` или аналог выводит список целей с описаниями
@@ -356,18 +226,11 @@ fi
 | help | `grep ## Makefile` | встроенный `npm run` | N/A | N/A |
 | check | `lint + import test` | `lint + typecheck` | `clippy + check` | `vet + lint` |
 
-### Бонусные цели (желательно)
-
-- `install` / `setup` — установка зависимостей + создание venv
-- `docker` / `docker-run` — сборка и запуск контейнера
-- `status` — сводка git + тесты + линтер
-- `hooks` — установка git-хуков
-
 > https://www.kdnuggets.com/the-case-for-makefiles-in-python-projects-and-how-to-get-started
 
 ---
 
-## 1d. Структура проекта — не всё в одном файле [core]
+## 1d. Структура проекта — не всё в одном файле (~2 мин) [core]
 
 AI-код часто живёт в одном гигантском файле. Это делает проект нечитаемым, неподдерживаемым, невозможным для AI-ассистента (контекст переполняется).
 
@@ -435,7 +298,7 @@ fi
 
 ---
 
-## 1e. Актуальность зависимостей — зависимости не устарели [quality]
+## 1e. Актуальность зависимостей — зависимости не устарели (~10 мин) [quality]
 <!-- glossary: lock file = файл фиксирующий точные версии зависимостей (requirements.txt, package-lock.json) -->
 
 Устаревшие зависимости = известные уязвимости + несовместимости. AI часто генерирует код с устаревшими паттернами.
@@ -455,25 +318,16 @@ if [ -f requirements.txt ] || [ -f pyproject.toml ]; then
     [ -f .venv/bin/pip ] && pip_cmd=".venv/bin/pip"
     outdated=$($pip_cmd list --outdated --format=columns 2>/dev/null | tail -n +3)
     if [ -n "$outdated" ]; then
-      count=$(echo "$outdated" | wc -l | tr -d ' ')
-      echo "  ⚠️ $count outdated Python packages:"
-      echo "$outdated" | head -10 | while read -r line; do
-        echo "     $line"
-      done
-      [ "$count" -gt 10 ] && echo "     ... и ещё $((count - 10))"
+      echo "  ⚠️ $(echo "$outdated" | wc -l | tr -d ' ') outdated Python packages:"
+      echo "$outdated" | head -10 | sed 's/^/     /'
     else
       echo "  ✅ All Python packages up to date"
     fi
   fi
-  # Проверить закреплённые версии:
   if [ -f requirements.txt ]; then
     unpinned=$(grep -cvE '^\s*$|^\s*#|==|>=|~=' requirements.txt 2>/dev/null || echo 0)
-    if [ "$unpinned" -gt 0 ]; then
-      echo "  ⚠️ $unpinned deps without version pin in requirements.txt"
-      echo "     → pip freeze > requirements.txt для фиксации версий"
-    else
-      echo "  ✅ All deps pinned in requirements.txt"
-    fi
+    [ "$unpinned" -gt 0 ] && echo "  ⚠️ $unpinned deps without version pin → pip freeze > requirements.txt" \
+      || echo "  ✅ All deps pinned in requirements.txt"
   fi
 fi
 
@@ -483,26 +337,17 @@ if [ -f package.json ]; then
     echo "  ✅ Lock file exists"
   else
     echo "  🟠 No lock file — npm install не воспроизводим"
-    echo "     → npm install (создаст package-lock.json)"
   fi
   if command -v npm &>/dev/null; then
     outdated_count=$(npm outdated 2>/dev/null | tail -n +2 | wc -l | tr -d ' ')
-    if [ "$outdated_count" -gt 0 ]; then
-      echo "  ⚠️ $outdated_count outdated npm packages"
-      npm outdated 2>/dev/null | head -5
-    else
-      echo "  ✅ All npm packages up to date"
-    fi
+    [ "$outdated_count" -gt 0 ] && { echo "  ⚠️ $outdated_count outdated npm packages"; npm outdated 2>/dev/null | head -5; } \
+      || echo "  ✅ All npm packages up to date"
   fi
 fi
 
 # Rust?
 if [ -f Cargo.toml ]; then
-  if [ -f Cargo.lock ]; then
-    echo "  ✅ Cargo.lock exists"
-  else
-    echo "  ⚠️ No Cargo.lock — cargo build не воспроизводим"
-  fi
+  [ -f Cargo.lock ] && echo "  ✅ Cargo.lock exists" || echo "  ⚠️ No Cargo.lock — cargo build не воспроизводим"
 fi
 ```
 
@@ -510,7 +355,7 @@ fi
 
 ---
 
-## 1f. README.md — документация для людей [core]
+## 1f. README.md — документация для людей (~2 мин) [core]
 
 CLAUDE.md — инструкции для Claude. README.md — первое, что видит человек: коллега, контрибьютор, будущий ты через 6 месяцев.
 
@@ -526,27 +371,15 @@ echo "=== README.md ==="
 if [ -f README.md ]; then
   lines=$(wc -l < README.md | tr -d ' ')
   echo "  ✅ README.md exists ($lines lines)"
-
-  # Check for essential sections:
-  has_desc=false
-  has_start=false
+  has_desc=false; has_start=false
   grep -qiE '^#+.*\b(about|описание|what|overview)\b' README.md 2>/dev/null && has_desc=true
-  # Also count first paragraph as description:
-  first_para=$(head -10 README.md | grep -cv '^#\|^$\|^\[')
-  [ "$first_para" -gt 0 ] && has_desc=true
-
+  [ "$(head -10 README.md | grep -cv '^#\|^$\|^\[')" -gt 0 ] && has_desc=true
   grep -qiE '^#+.*(start|install|setup|usage|запуск|установка)' README.md 2>/dev/null && has_start=true
-
   [ "$has_desc" = true ] && echo "  ✅ Has description" || echo "  ⚠️ No project description"
-  [ "$has_start" = true ] && echo "  ✅ Has getting started / install" || echo "  ⚠️ No getting started section"
-
-  # Minimal README check:
-  if [ "$lines" -lt 5 ]; then
-    echo "  🟠 Only $lines lines — слишком короткий, добавь описание и Quick Start"
-  fi
+  [ "$has_start" = true ] && echo "  ✅ Has getting started" || echo "  ⚠️ No getting started section"
+  [ "$lines" -lt 5 ] && echo "  🟠 Only $lines lines — добавь описание и Quick Start"
 else
-  echo "  ⚠️ No README.md — новый человек не поймёт что это за проект"
-  echo "     → Создай README.md с: описание + Quick Start + инструкция запуска"
+  echo "  ⚠️ No README.md — создай с описанием + Quick Start + инструкция запуска"
 fi
 ```
 

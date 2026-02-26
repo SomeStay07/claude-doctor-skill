@@ -1,10 +1,70 @@
 # Слой 2 (продолжение): Продвинутые проверки качества
 
-Основные проверки: [QUALITY.md](QUALITY.md)
+Основные проверки (2a–2f): [QUALITY.md](QUALITY.md)
+Содержит: 2g branch protection, 2h type checking, 2i coverage, 2j print/logging, 2k PreToolUse
 
 ---
 
-## 2h. Проверка типов — ловим баги до запуска [quality]
+## 2g. Branch protection — PR workflow (~10 мин) [advanced]
+
+Прямой push в main — рецепт катастрофы. **Branch protection** — мерж только через Pull Request.
+
+- [ ] **Ветка по умолчанию защищена** — прямой push в main/master запрещён
+- [ ] **PR обязателен** — мерж только через Pull Request
+- [ ] **Status checks обязательны** — CI должен пройти перед мержем (если CI настроен)
+- [ ] **Именование веток** — feature branches по конвенции (`feature/`, `fix/`, `chore/`)
+
+### Команды проверки
+
+```bash
+echo "=== Branch protection ==="
+branch=$(git branch --show-current 2>/dev/null)
+echo "  Current branch: $branch"
+
+branch_count=$(git branch -a 2>/dev/null | wc -l | tr -d ' ')
+if [ "$branch_count" -le 1 ]; then
+  echo "  ⚠️ Only 1 branch — всё коммитится прямо в main"
+else
+  echo "  ✅ $branch_count branches exist"
+  good_names=$(git branch -a 2>/dev/null | grep -cE 'feature/|fix/|chore/|hotfix/|release/' || echo 0)
+  [ "$good_names" -gt 0 ] && echo "  ✅ Branch naming convention ($good_names named branches)"
+fi
+
+# GitHub branch protection (requires gh CLI):
+if command -v gh &>/dev/null; then
+  default_branch=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
+  : "${default_branch:=main}"
+  if protection=$(gh api "repos/{owner}/{repo}/branches/$default_branch/protection" 2>/dev/null); then
+    echo "  ✅ Branch protection enabled on $default_branch"
+    echo "$protection" | python3 -c "
+import json,sys;d=json.load(sys.stdin)
+print('     PR reviews: ✅' if d.get('required_pull_request_reviews') else '     PR reviews: ⚠️ not required')
+print('     Status checks: ✅' if d.get('required_status_checks') else '     Status checks: ⚠️ not required')
+" 2>/dev/null
+  else
+    echo "  ⚠️ No branch protection on $default_branch"
+    echo "     → GitHub: Settings → Branches → Add rule"
+  fi
+else
+  echo "  🔵 gh CLI not available — check branch protection manually"
+fi
+```
+
+### Workflow по уровню зрелости
+
+| Уровень | Workflow | Для кого |
+|---------|---------|----------|
+| **Начинающий** | main + pre-push hook | Соло, учебные проекты |
+| **Средний** | main + feature branches + PR | Соло с production |
+| **Продвинутый** | main + develop + feature + PR + CI checks | Команда, open-source |
+
+**Минимум для вайбкодера**: `git checkout -b feature/x` → работай → `gh pr create --fill` → review diff → `gh pr merge`.
+
+> https://quesma.com/blog/vibe-code-git-blame/
+
+---
+
+## 2h. Проверка типов — ловим баги до запуска (~10 мин) [quality]
 <!-- glossary: type checking = инструмент проверки типов данных — ловит ошибки до запуска программы -->
 
 AI-код часто untyped — нет аннотаций типов, нет проверки. Результат: 2.27x больше null reference ошибок, неправильные аргументы функций, невозможность рефакторить.
@@ -17,70 +77,35 @@ AI-код часто untyped — нет аннотаций типов, нет п
 
 ```bash
 echo "=== Type checking ==="
-
 # Python?
 if [ -f requirements.txt ] || [ -f pyproject.toml ]; then
-  mypy_found=false
-  pyright_found=false
-
-  if command -v mypy &>/dev/null || [ -f .venv/bin/mypy ]; then
-    mypy_found=true
-    echo "  ✅ mypy installed"
-  fi
-  if command -v pyright &>/dev/null || [ -f .venv/bin/pyright ]; then
-    pyright_found=true
-    echo "  ✅ pyright installed"
-  fi
-
-  if [ "$mypy_found" = false ] && [ "$pyright_found" = false ]; then
-    echo "  ⚠️ No type checker — pip install mypy"
-    echo "     AI-код без типов: 2.27x больше null reference ошибок"
-  fi
+  mypy_found=false; pyright_found=false
+  { command -v mypy &>/dev/null || [ -f .venv/bin/mypy ]; } && { mypy_found=true; echo "  ✅ mypy installed"; }
+  { command -v pyright &>/dev/null || [ -f .venv/bin/pyright ]; } && { pyright_found=true; echo "  ✅ pyright installed"; }
+  [ "$mypy_found" = false ] && [ "$pyright_found" = false ] && echo "  ⚠️ No type checker — pip install mypy (AI-код без типов: 2.27x больше null ref ошибок)"
 
   # Config?
-  if [ -f mypy.ini ] || [ -f .mypy.ini ]; then
-    echo "  ✅ mypy config found"
-  elif [ -f pyproject.toml ] && grep -q '\[tool.mypy\]' pyproject.toml 2>/dev/null; then
-    echo "  ✅ mypy config in pyproject.toml"
-  elif [ -f pyrightconfig.json ]; then
-    echo "  ✅ pyright config found"
-  elif [ "$mypy_found" = true ] || [ "$pyright_found" = true ]; then
-    echo "  ⚠️ Type checker installed but no config — using loose defaults"
-    echo "     → Создай mypy.ini: [mypy]\\nstrict = true"
+  if [ -f mypy.ini ] || [ -f .mypy.ini ]; then echo "  ✅ mypy config"
+  elif [ -f pyproject.toml ] && grep -q '\[tool.mypy\]' pyproject.toml 2>/dev/null; then echo "  ✅ mypy config in pyproject.toml"
+  elif [ -f pyrightconfig.json ]; then echo "  ✅ pyright config"
+  elif [ "$mypy_found" = true ] || [ "$pyright_found" = true ]; then echo "  ⚠️ No config — using loose defaults"
   fi
 
-  # Type annotations presence:
+  # Type annotations:
   src_dirs=""
-  for d in bot src app lib; do
-    [ -d "$d" ] && src_dirs="$src_dirs $d"
-  done
+  for d in bot src app lib; do [ -d "$d" ] && src_dirs="$src_dirs $d"; done
   if [ -n "$src_dirs" ]; then
-    total_funcs=$(grep -rn "def " --include="*.py" $src_dirs 2>/dev/null | wc -l | tr -d ' ')
-    typed_funcs=$(grep -rn "def .*->.*:" --include="*.py" $src_dirs 2>/dev/null | wc -l | tr -d ' ')
-    if [ "$total_funcs" -gt 0 ]; then
-      pct=$((typed_funcs * 100 / total_funcs))
-      echo "  📊 Type annotations: $typed_funcs/$total_funcs functions ($pct%)"
-      if [ "$pct" -lt 30 ]; then
-        echo "     ⚠️ Мало аннотаций — mypy не сможет поймать баги"
-      fi
-    fi
+    total=$(grep -rn "def " --include="*.py" $src_dirs 2>/dev/null | wc -l | tr -d ' ')
+    typed=$(grep -rn "def .*->.*:" --include="*.py" $src_dirs 2>/dev/null | wc -l | tr -d ' ')
+    [ "$total" -gt 0 ] && { pct=$((typed*100/total)); echo "  📊 Annotations: $typed/$total ($pct%)"; [ "$pct" -lt 30 ] && echo "     ⚠️ Мало аннотаций"; }
   fi
 fi
-
 # TypeScript?
 if [ -f tsconfig.json ]; then
-  echo "  ✅ tsconfig.json found"
-  if grep -q '"strict"[[:space:]]*:[[:space:]]*true' tsconfig.json 2>/dev/null; then
-    echo "  ✅ strict mode enabled"
-  else
-    echo "  ⚠️ strict mode NOT enabled — пропускает null checks, implicit any"
-    echo "     → Добавь \"strict\": true в tsconfig.json"
-  fi
-  # Check for any:
+  echo "  ✅ tsconfig.json"
+  grep -q '"strict"[[:space:]]*:[[:space:]]*true' tsconfig.json 2>/dev/null && echo "  ✅ strict mode" || echo "  ⚠️ strict mode NOT enabled"
   any_count=$(grep -rn ": any" --include="*.ts" --include="*.tsx" src/ app/ 2>/dev/null | grep -v "node_modules" | wc -l | tr -d ' ')
-  if [ "$any_count" -gt 10 ]; then
-    echo "  ⚠️ $any_count uses of ': any' — типизация обходится"
-  fi
+  [ "$any_count" -gt 10 ] && echo "  ⚠️ $any_count ': any' uses — типизация обходится"
 fi
 ```
 
@@ -98,7 +123,7 @@ fi
 
 ---
 
-## 2i. Покрытие кода тестами — тесты реально покрывают код [quality]
+## 2i. Покрытие кода тестами — тесты реально покрывают код (~10 мин) [quality]
 <!-- glossary: code coverage = процент кода, покрытого тестами — показывает какой код не тестируется -->
 
 Тесты существуют != тесты покрывают код. Можно иметь 500 тестов и 10% покрытия. Coverage gate не даёт мержить код без тестов.
@@ -181,7 +206,7 @@ fi
 
 ---
 
-## 2j. Нет print() / console.log в production [core]
+## 2j. Нет print() / console.log в production (~5 мин) [core]
 
 AI обожает `print()` для дебага. В production нужен `logging` с уровнями (DEBUG/INFO/WARNING/ERROR), ротацией, structured output. `print()` не имеет уровней, не пишет в файл, не показывает timestamp.
 
@@ -262,7 +287,7 @@ fi
 
 ---
 
-## 2k. PreToolUse hooks — предотвращение ошибок ДО записи [cc]
+## 2k. PreToolUse hooks — предотвращение ошибок ДО записи (~10 мин) [cc]
 <!-- glossary: PreToolUse hook = скрипт, запускающийся ПЕРЕД действием Claude — может заблокировать опасные команды -->
 
 PostToolUse ловит ошибки ПОСЛЕ записи. PreToolUse **предотвращает** их — блокирует опасные команды и напоминает правила до того, как Claude напишет код.
@@ -319,28 +344,47 @@ fi
 
 ### Два типа PreToolUse hooks
 
-**1. Напоминания по шаблонам** (matcher: `Edit|Write`) — не блокируют, только напоминают:
+**1. Напоминания** (matcher: `Edit|Write`) — `exit 0`, только советуют:
 ```bash
 #!/bin/bash
-# check-patterns.sh — domain-specific reminders
-file_path="$CLAUDE_FILE_PATH"
-if [[ "$file_path" =~ bot/.*\.py$ ]]; then
-  echo "Reminders: no sync I/O in async, no bare except, logging not print()"
-fi
-exit 0  # НЕ блокирует — только советует
+[[ "$CLAUDE_FILE_PATH" =~ bot/.*\.py$ ]] && echo "Reminders: no sync I/O, no bare except, logging not print()"
+exit 0
 ```
 
-**2. Блокировщики команд** (matcher: `Bash`) — реально блокируют опасные команды:
+**2. Блокировщики** (matcher: `Bash`) — `exit 2`, реально блокируют:
 ```bash
 #!/bin/bash
-# block-dangerous.sh — prevent accidental merges/deletes
-if echo "$CLAUDE_BASH_COMMAND" | grep -qiE '(gh\s+pr\s+merge|git\s+merge\s+(main|master)|rm\s+-rf)'; then
-  echo "BLOCKED: This command requires explicit user permission"
-  exit 2  # Блокирует выполнение
-fi
+echo "$CLAUDE_BASH_COMMAND" | grep -qiE '(gh\s+pr\s+merge|git\s+merge\s+(main|master)|rm\s+-rf)' \
+  && { echo "BLOCKED: requires explicit permission"; exit 2; }
 exit 0
 ```
 
 **Exit codes**: `exit 0` = разрешить (с advisory output), `exit 2` = заблокировать.
 
 > https://docs.anthropic.com/en/docs/claude-code/hooks
+
+---
+
+## Связь между уровнями защиты
+
+```
+Уровень              Что ловит                    Скорость     Обход           Блокирует?
+────────────────────────────────────────────────────────────────────────────────────────
+PostToolUse          Syntax + format               ~100ms       Нельзя          Нет (feedback)
+Pre-commit           Lint + secrets + debug         ~3 sec       --no-verify     Да (commit)
+Pre-push             Tests + lint                   ~30 sec      --no-verify     Да (push)
+Branch protection    PR review + CI checks          ~3 min       Admin bypass    Да (merge)
+CI (опционально)     Full test suite + lint         ~3 min       Force push      Да (PR)
+```
+
+**PostToolUse — самый ценный**: работает при КАЖДОМ Edit/Write, ловит мгновенно. Не блокирует запись, но Claude видит ошибку через stderr и исправляет.
+
+**Pre-commit — второй барьер**: ловит lint, секреты, debug prints. Реально блокирует commit. Обходится `--no-verify`.
+
+**CI — страховка**: для команд и open-source. Единственная защита от `--no-verify`.
+
+### Ограничения pre-commit
+
+- `--no-verify` обходит ВСЕ хуки — единственная защита: CI
+- Secrets scan через grep имеет false negatives — для серьёзной защиты: gitleaks
+- Хуки в `.git/hooks/` не коммитятся — нужен symlink на `scripts/pre-commit.sh`

@@ -4,7 +4,7 @@
 
 ---
 
-## 4a. MCP серверы — инструменты для Claude [cc]
+## 4a. MCP серверы — инструменты для Claude (~15 мин) [cc]
 <!-- glossary: MCP-серверы = плагины, дающие Claude прямой доступ к базам данных, API и другим инструментам -->
 
 - [ ] **Настроен** — `.mcp.json` существует с нужными серверами
@@ -19,27 +19,19 @@
 echo "=== MCP серверы ==="
 if [ -f .mcp.json ]; then
   echo "  ✅ .mcp.json exists"
-
-  # List configured servers (parse JSON safely):
   python3 -c "
 import json
 try:
-    data = json.load(open('.mcp.json'))
-    servers = data.get('mcpServers', {})
-    for name in servers:
-        print(f'  📡 {name}')
-    if not servers:
-        print('  ⚠️ mcpServers is empty')
-except Exception as e:
-    print(f'  ❌ Failed to parse .mcp.json: {e}')
+    servers = json.load(open('.mcp.json')).get('mcpServers', {})
+    for name in servers: print(f'  📡 {name}')
+    if not servers: print('  ⚠️ mcpServers is empty')
+except Exception as e: print(f'  ❌ Failed to parse .mcp.json: {e}')
 "
-
-  # Check for hardcoded secrets in args (not env block):
+  # Check for hardcoded secrets in args:
   has_secrets=false
-  grep -q 'args.*password' .mcp.json 2>/dev/null && has_secrets=true
-  grep -q 'args.*token' .mcp.json 2>/dev/null && has_secrets=true
-  grep -q 'args.*secret' .mcp.json 2>/dev/null && has_secrets=true
-  grep -qE 'args.*api[_.-]key' .mcp.json 2>/dev/null && has_secrets=true
+  for pat in 'args.*password' 'args.*token' 'args.*secret' 'args.*api[_.-]key'; do
+    grep -qE "$pat" .mcp.json 2>/dev/null && has_secrets=true
+  done
   if [ "$has_secrets" = true ]; then
     echo "  🔴 HARDCODED SECRETS in .mcp.json args! Move to 'env' block"
   else
@@ -51,26 +43,13 @@ fi
 
 # Suggest MCP servers based on stack:
 echo "=== Рекомендации ==="
+src_dirs=$(for d in bot src app lib; do [ -d "$d" ] && printf "%s " "$d"; done)
 
-# Find source directories dynamically:
-src_dirs=""
-for d in bot src app lib; do
-  if [ -d "$d" ]; then
-    if [ -z "$src_dirs" ]; then
-      src_dirs="$d"
-    else
-      src_dirs="$src_dirs $d"
-    fi
-  fi
-done
-
-# DB?
 if [ -n "$src_dirs" ]; then
+  # DB detection
   db_found=false
   grep -rq "DATABASE_URL" .env.example 2>/dev/null && db_found=true
-  grep -rq "asyncpg" $src_dirs 2>/dev/null && db_found=true
-  grep -rq "psycopg" $src_dirs 2>/dev/null && db_found=true
-  grep -rq "prisma" $src_dirs 2>/dev/null && db_found=true
+  grep -rqE "asyncpg|psycopg|prisma" $src_dirs 2>/dev/null && db_found=true
   if [ "$db_found" = true ]; then
     if grep -q "postgres" .mcp.json 2>/dev/null; then
       echo "  ✅ postgres MCP (проект использует PostgreSQL)"
@@ -78,27 +57,24 @@ if [ -n "$src_dirs" ]; then
       echo "  🟠 РЕКОМЕНДУЕТСЯ: postgres MCP (проект использует PostgreSQL)"
     fi
   fi
-fi
-
-# Large codebase?
-file_count=0
-for ext in py ts js go rs; do
-  if [ -n "$src_dirs" ]; then
+  # Large codebase?
+  file_count=0
+  for ext in py ts js go rs; do
     cnt=$(find $src_dirs -name "*.$ext" 2>/dev/null | wc -l | tr -d ' ')
     file_count=$((file_count + cnt))
-  fi
-done
-if [ "$file_count" -gt 20 ]; then
-  if grep -q "serena" .mcp.json 2>/dev/null; then
-    echo "  ✅ serena (${file_count} source files — code intelligence полезна)"
-  else
-    echo "  🟡 РЕКОМЕНДУЕТСЯ: serena (${file_count} source files — symbol navigation)"
+  done
+  if [ "$file_count" -gt 20 ]; then
+    if grep -q "serena" .mcp.json 2>/dev/null; then
+      echo "  ✅ serena (${file_count} source files — code intelligence полезна)"
+    else
+      echo "  🟡 РЕКОМЕНДУЕТСЯ: serena (${file_count} source files — symbol navigation)"
+    fi
   fi
 fi
 
-# Web search? (Claude Code has built-in WebSearch/WebFetch — tavily/brave rarely needed)
+# Web search? (Claude Code has built-in WebSearch/WebFetch)
 if grep -qE "tavily|brave" .mcp.json 2>/dev/null; then
-  echo "  🔵 tavily/brave MCP (Claude Code уже имеет встроенный WebSearch — MCP нужен только для Agent SDK)"
+  echo "  🔵 tavily/brave MCP (Claude Code имеет встроенный WebSearch — MCP нужен только для Agent SDK)"
 fi
 ```
 
@@ -141,7 +117,7 @@ fi
 
 ---
 
-## 4b. Плагины — расширения Claude Code [cc]
+## 4b. Плагины — расширения Claude Code (~15 мин) [cc]
 <!-- glossary: плагины = расширения Claude Code, добавляющие новые возможности (документация, память) -->
 
 - [ ] **Context7 включён** — актуальная документация библиотек
@@ -159,7 +135,6 @@ for settings_file in ".claude/settings.json" ".claude/settings.local.json"; do
   if [ -f "$settings_file" ]; then
     plugins_found=true
     echo "  📋 $settings_file:"
-    # Extract enabled plugins (format: "name@source": true):
     plugin_list=$(grep -oE '"[a-zA-Z0-9_-]+@[^"]+": *true' "$settings_file" 2>/dev/null)
     if [ -n "$plugin_list" ]; then
       echo "$plugin_list" | while read -r plugin; do
@@ -176,7 +151,7 @@ if [ "$plugins_found" = false ]; then
   echo "  ⚠️ No .claude/settings.json found"
 fi
 
-# Check essentials (search across both files):
+# Check essentials:
 echo "=== Рекомендации ==="
 if grep -rq "context7" .claude/settings.json .claude/settings.local.json 2>/dev/null; then
   echo "  ✅ context7 (актуальные доки библиотек)"
@@ -209,7 +184,7 @@ fi
 
 ---
 
-## 4c. Файлы памяти — долгосрочный контекст [cc]
+## 4c. Файлы памяти — долгосрочный контекст (~15 мин) [cc]
 <!-- glossary: episodic memory = плагин, позволяющий Claude помнить контекст из прошлых сессий -->
 
 - [ ] **MEMORY.md существует** — user-level (`~/.claude/projects/*/memory/MEMORY.md`) или проектный
@@ -221,18 +196,14 @@ fi
 
 ```bash
 echo "=== Файлы памяти ==="
-
 # Check user-level MEMORY.md (Claude Code auto-memory):
-# Claude stores it in ~/.claude/projects/<project-hash>/memory/MEMORY.md
 project_dir=$(pwd)
 project_hash=$(echo "$project_dir" | tr '/' '-')
 user_memory="$HOME/.claude/projects/$project_hash/memory/MEMORY.md"
 if [ -f "$user_memory" ]; then
   lines=$(wc -l < "$user_memory" | tr -d ' ')
   echo "  ✅ User MEMORY.md ($lines lines)"
-  if [ "$lines" -gt 200 ]; then
-    echo "     🟡 Длинный ($lines строк) — подрежь до 200, Claude видит только начало"
-  fi
+  [ "$lines" -gt 200 ] && echo "     🟡 Длинный ($lines строк) — подрежь до 200, Claude видит только начало"
 else
   echo "  ⚠️ No user-level MEMORY.md (Claude авто-создаёт при /memory)"
 fi
@@ -242,9 +213,7 @@ for f in ".claude/MEMORY.md" "MEMORY.md"; do
   if [ -f "$f" ]; then
     lines=$(wc -l < "$f" | tr -d ' ')
     echo "  ✅ $f ($lines lines)"
-    if [ "$lines" -gt 200 ]; then
-      echo "     🟡 Длинный ($lines строк) — подрежь до 200"
-    fi
+    [ "$lines" -gt 200 ] && echo "     🟡 Длинный ($lines строк) — подрежь до 200"
   fi
 done
 
@@ -253,29 +222,20 @@ if [ -d ".serena/memories" ]; then
   mem_count=$(find ".serena/memories" -name "*.md" 2>/dev/null | wc -l | tr -d ' ')
   echo "  ✅ .serena/memories/ ($mem_count files)"
   find ".serena/memories" -name "*.md" 2>/dev/null | while read -r f; do
-    lines=$(wc -l < "$f" | tr -d ' ')
-    echo "     📝 $(basename "$f") ($lines lines)"
+    echo "     📝 $(basename "$f") ($(wc -l < "$f" | tr -d ' ') lines)"
   done
-else
-  # Only warn if serena plugin is active:
-  if grep -q "serena" .claude/settings.json 2>/dev/null; then
-    echo "  ⚠️ No .serena/memories/ (serena plugin активен, но памяти нет)"
-  fi
+elif grep -q "serena" .claude/settings.json 2>/dev/null; then
+  echo "  ⚠️ No .serena/memories/ (serena plugin активен, но памяти нет)"
 fi
 
 # Check agent memory settings:
 echo "=== Память агентов ==="
-agents_dir=".claude/agents"
-if [ -d "$agents_dir" ]; then
-  for f in "$agents_dir"/*.md; do
+if [ -d ".claude/agents" ]; then
+  for f in .claude/agents/*.md; do
     [ ! -f "$f" ] && continue
     name=$(grep -m1 '^name:' "$f" | sed 's/name:[[:space:]]*//')
     memory=$(grep -m1 '^memory:' "$f" | sed 's/memory:[[:space:]]*//')
-    if [ -n "$memory" ]; then
-      echo "  ✅ $name → memory: $memory"
-    else
-      echo "  🔵 $name → нет memory (каждая сессия с нуля)"
-    fi
+    [ -n "$memory" ] && echo "  ✅ $name → memory: $memory" || echo "  🔵 $name → нет memory (каждая сессия с нуля)"
   done
 fi
 ```
@@ -308,7 +268,7 @@ fi
 
 ---
 
-## 4d. SessionStart compact хук — контекст после compaction [cc]
+## 4d. SessionStart compact хук — контекст после compaction (~15 мин) [cc]
 <!-- glossary: SessionStart hook = скрипт, выполняющийся при запуске Claude — напоминает критичные правила проекта -->
 
 Когда контекст Claude переполняется, происходит compaction — старые сообщения сжимаются. Claude забывает критичные правила проекта (monkey-patch, cookie format, async constraints). SessionStart хук с matcher `compact` инжектирует ремайндер ТОЛЬКО после compaction.
@@ -322,26 +282,19 @@ fi
 ```bash
 echo "=== SessionStart compact хук ==="
 settings=".claude/settings.json"
-
 if [ ! -f "$settings" ]; then
   echo "  ❌ No .claude/settings.json"
 else
   compact_hook=$(python3 -c "
-import json
-data = json.load(open('$settings'))
-hooks = data.get('hooks', {}).get('SessionStart', [])
-for h in hooks:
-    if h.get('matcher') == 'compact':
-        for hook in h.get('hooks', []):
-            cmd = hook.get('command', '')
-            print(cmd[:100])
+import json; data = json.load(open('$settings'))
+for h in data.get('hooks',{}).get('SessionStart',[]):
+    if h.get('matcher')=='compact':
+        for hook in h.get('hooks',[]): print(hook.get('command','')[:100])
 " 2>/dev/null)
-
   if [ -n "$compact_hook" ]; then
     echo "  ✅ SessionStart compact хук найден"
     echo "     $compact_hook"
   else
-    # Check if there's SessionStart at all:
     has_session=$(grep -q "SessionStart" "$settings" 2>/dev/null && echo "yes")
     if [ "$has_session" = "yes" ]; then
       echo "  ⚠️ SessionStart хук есть, но нет matcher 'compact'"
@@ -349,7 +302,6 @@ for h in hooks:
     else
       echo "  ⚠️ Нет SessionStart compact хука"
       echo "     После compaction Claude забудет критичные правила проекта"
-      echo "     → Добавь одну строку с самыми важными gotchas проекта"
     fi
   fi
 fi
@@ -384,7 +336,7 @@ fi
 
 ---
 
-## 4e. Хук уведомлений — оповещение когда Claude ждёт [cc]
+## 4e. Хук уведомлений — оповещение когда Claude ждёт (~15 мин) [cc]
 
 Без оповещения: Claude закончил работу и ждёт ввода, а юзер ушёл за кофе. С хуком уведомлений — macOS/Linux уведомление со звуком при каждом ожидании.
 
@@ -397,51 +349,32 @@ fi
 ```bash
 echo "=== Хук уведомлений ==="
 settings=".claude/settings.json"
-
 if [ ! -f "$settings" ]; then
   echo "  ❌ No .claude/settings.json"
 else
   notif_hook=$(python3 -c "
-import json
-data = json.load(open('$settings'))
-hooks = data.get('hooks', {}).get('Notification', [])
-for h in hooks:
-    for hook in h.get('hooks', []):
-        cmd = hook.get('command', '')
-        print(cmd[:80])
+import json; data = json.load(open('$settings'))
+for h in data.get('hooks',{}).get('Notification',[]):
+    for hook in h.get('hooks',[]): print(hook.get('command','')[:80])
 " 2>/dev/null)
-
   if [ -n "$notif_hook" ]; then
     echo "  ✅ Хук уведомлений найден"
-    # Check for sound:
-    if echo "$notif_hook" | grep -qiE "sound|notify-send|osascript"; then
-      echo "  ✅ Системное уведомление"
-    fi
+    echo "$notif_hook" | grep -qiE "sound|notify-send|osascript" && echo "  ✅ Системное уведомление"
   else
     echo "  🔵 Нет хука уведомлений (опционально, но экономит время)"
-    echo "     Claude ждёт ввода, а ты не знаешь — уведомление решает"
   fi
 fi
 ```
 
 ### Уведомления по ОС
 
-**macOS:**
-```json
-{
-  "hooks": {
-    "Notification": [{
-      "hooks": [{
-        "type": "command",
-        "command": "osascript -e 'display notification \"Claude needs input\" with title \"Claude Code\" sound name \"Glass\"'"
-      }]
-    }]
-  }
-}
+**macOS** — добавь в `hooks.Notification` в `.claude/settings.json`:
+```
+osascript -e 'display notification "Claude needs input" with title "Claude Code" sound name "Glass"'
 ```
 
-**Linux:**
-```bash
+**Linux** — добавь в `hooks.Notification`:
+```
 notify-send "Claude Code" "Claude needs your input" --urgency=normal
 # Для звука: paplay /usr/share/sounds/freedesktop/stereo/message.oga
 ```
