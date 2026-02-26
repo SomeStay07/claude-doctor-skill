@@ -118,14 +118,14 @@
 
 **Краткая сводка** (7 проверок):
 - [ ] `[cc]` Скиллы — `/test` + `/status` минимум, с triggers и $ARGUMENTS handling
-- [ ] `[quality]` Установщик хуков — scripts/install-hooks.sh + make hooks, symlinks в .git/hooks/
-- [ ] `[cc]` Оптимизация скиллов — disable-model-invocation: true на command-runner скиллах (/test, /status)
-- [ ] `[advanced]` Dependabot / Renovate — автообновление зависимостей, weekly/monthly schedule
-- [ ] `[cc]` Stop хук — напоминание про uncommitted changes + memory при выходе
-- [ ] `[core]` Юнит-тесты — существуют, проходят, покрывают source модули
-- [ ] `[quality]` Smoke-тесты — быстрая проверка "приложение запускается?" (<5 секунд)
+- [ ] `[quality]` Stop хук — напоминание про uncommitted changes + memory при выходе
+- [ ] `[cc]` Юнит-тесты — существуют, проходят, покрывают source модули
+- [ ] `[advanced]` Smoke-тесты — быстрая проверка "приложение запускается?" (<5 секунд)
+- [ ] `[cc]` Dependabot / Renovate — автообновление зависимостей, weekly/monthly schedule
+- [ ] `[core]` Установщик хуков — scripts/install-hooks.sh + make hooks, symlinks в .git/hooks/
+- [ ] `[quality]` Оптимизация скиллов — disable-model-invocation: true на command-runner скиллах (/test, /status)
 
-**Детали с командами проверки и примерами**: [DX.md](layers/DX.md)
+**Детали с командами проверки и примерами**: [DX.md](layers/DX.md) + [DX-EXTRA.md](layers/DX-EXTRA.md)
 
 ---
 
