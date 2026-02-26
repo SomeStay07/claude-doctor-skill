@@ -31,7 +31,7 @@ mkdir -p "$DIR/layers"
 
 # Download main files
 echo -e "  Downloading main files..."
-for file in SKILL.md CHECKLIST.md; do
+for file in SKILL.md GUARDRAILS.md CHECKLIST.md; do
   if curl -sSL "$REPO/$file" -o "$DIR/$file" 2>/dev/null; then
     echo -e "    ${GREEN}+${NC} $file"
   else
@@ -45,7 +45,7 @@ done
 
 # Download layer files
 echo -e "  Downloading layer details..."
-for layer in SECURITY FOUNDATION QUALITY QUALITY-EXTRA INTELLIGENCE CONTEXT DX MATURITY; do
+for layer in SECURITY SECURITY-EXTRA FOUNDATION QUALITY QUALITY-EXTRA INTELLIGENCE CONTEXT DX DX-EXTRA MATURITY; do
   if curl -sSL "$REPO/layers/$layer.md" -o "$DIR/layers/$layer.md" 2>/dev/null; then
     echo -e "    ${GREEN}+${NC} layers/$layer.md"
   else
@@ -58,11 +58,13 @@ done
 echo ""
 echo -e "  ${BOLD}Verifying...${NC}"
 file_count=0
-for f in "$DIR/SKILL.md" "$DIR/CHECKLIST.md" \
-         "$DIR/layers/SECURITY.md" "$DIR/layers/FOUNDATION.md" \
+for f in "$DIR/SKILL.md" "$DIR/GUARDRAILS.md" "$DIR/CHECKLIST.md" \
+         "$DIR/layers/SECURITY.md" "$DIR/layers/SECURITY-EXTRA.md" \
+         "$DIR/layers/FOUNDATION.md" \
          "$DIR/layers/QUALITY.md" "$DIR/layers/QUALITY-EXTRA.md" \
          "$DIR/layers/INTELLIGENCE.md" "$DIR/layers/CONTEXT.md" \
-         "$DIR/layers/DX.md" "$DIR/layers/MATURITY.md"; do
+         "$DIR/layers/DX.md" "$DIR/layers/DX-EXTRA.md" \
+         "$DIR/layers/MATURITY.md"; do
   if [ -f "$f" ] && [ -s "$f" ]; then
     file_count=$((file_count + 1))
   else
@@ -70,10 +72,10 @@ for f in "$DIR/SKILL.md" "$DIR/CHECKLIST.md" \
   fi
 done
 
-if [ "$file_count" -eq 10 ]; then
-  echo -e "    ${GREEN}${BOLD}All 10 files verified${NC}"
+if [ "$file_count" -eq 13 ]; then
+  echo -e "    ${GREEN}${BOLD}All 13 files verified${NC}"
 else
-  echo -e "    ${RED}${BOLD}Only $file_count/10 files installed${NC}"
+  echo -e "    ${RED}${BOLD}Only $file_count/13 files installed${NC}"
   exit 1
 fi
 
