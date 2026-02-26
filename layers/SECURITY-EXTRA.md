@@ -51,7 +51,8 @@ else
   fi
 
   # Hardcoded ENV secrets?
-  secret_envs=$(grep -nE "^ENV\s+[A-Z_]*(KEY|SECRET|TOKEN|PASSWORD|CREDENTIAL)\s*=" "$dockerfile" 2>/dev/null)
+  secret_envs=$(grep -nE "^ENV\s+[A-Z_]*(KEY|SECRET|TOKEN|PASSWORD|CREDENTIAL)\s*=" "$dockerfile" 2>/dev/null | grep -v '=\${')
+
   if [ -n "$secret_envs" ]; then
     echo "  🔴 Hardcoded secrets in ENV:"
     echo "$secret_envs" | while read -r line; do echo "     $line"; done
@@ -69,7 +70,7 @@ else
   fi
 
   # Multi-stage build?
-  stage_count=$(grep -cE "^FROM\s+" "$dockerfile" 2>/dev/null || echo 0)
+  stage_count=$(grep -cE "^FROM\s+" "$dockerfile" 2>/dev/null); stage_count=${stage_count:-0}
   if [ "$stage_count" -gt 1 ]; then
     echo "  ✅ Multi-stage build ($stage_count stages)"
   else
@@ -182,7 +183,7 @@ echo "=== AI API cost protection ==="
 ai_api_found=false
 
 # Детекция AI API ключей:
-for key_name in OPENAI_API_KEY ANTHROPIC_API_KEY GOOGLE_AI_API_KEY GROQ_API_KEY TOGETHER_API_KEY; do
+for key_name in OPENAI_API_KEY ANTHROPIC_API_KEY GOOGLE_AI_API_KEY GEMINI_API_KEY GROQ_API_KEY TOGETHER_API_KEY MISTRAL_API_KEY DEEPSEEK_API_KEY COHERE_API_KEY REPLICATE_API_TOKEN; do
   if grep -q "$key_name" .env.example .env 2>/dev/null; then
     ai_api_found=true
     echo "  📡 $key_name обнаружен"

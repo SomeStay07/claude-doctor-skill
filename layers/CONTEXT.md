@@ -285,8 +285,9 @@ fi
 
 ```bash
 echo "=== SessionStart compact хук ==="
-settings=".claude/settings.json"
-if [ ! -f "$settings" ]; then
+settings=""
+for sf in .claude/settings.local.json .claude/settings.json; do [ -f "$sf" ] && settings="$sf" && break; done
+if [ -z "$settings" ]; then
   echo "  ❌ No .claude/settings.json"
 else
   compact_hook=$(python3 -c "
@@ -352,8 +353,9 @@ fi
 
 ```bash
 echo "=== Хук уведомлений ==="
-settings=".claude/settings.json"
-if [ ! -f "$settings" ]; then
+settings=""
+for sf in .claude/settings.local.json .claude/settings.json; do [ -f "$sf" ] && settings="$sf" && break; done
+if [ -z "$settings" ]; then
   echo "  ❌ No .claude/settings.json"
 else
   notif_hook=$(python3 -c "

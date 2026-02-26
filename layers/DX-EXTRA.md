@@ -233,13 +233,14 @@ else
     has_disable=$(grep -c 'disable-model-invocation.*true' "$skill_file" 2>/dev/null)
 
     # Is this a command-runner skill? (check if it mostly runs bash)
-    bash_lines=$(grep -cE '(bash|python|pytest|make |npm |git )' "$skill_file" 2>/dev/null || echo 0)
-    analysis_lines=$(grep -cE '(анализ|analyze|diagnos|review|think|plan)' "$skill_file" 2>/dev/null || echo 0)
+    bash_lines=$(grep -cE '(bash|python|pytest|make |npm |git |cargo |go |docker )' "$skill_file" 2>/dev/null); bash_lines=${bash_lines:-0}
+    analysis_lines=$(grep -cE '(анализ|analyze|diagnos|review|think|plan|summarize|explain|refactor|decision|recommend)' "$skill_file" 2>/dev/null); analysis_lines=${analysis_lines:-0}
+    total_lines=$(wc -l < "$skill_file" 2>/dev/null | tr -d ' '); total_lines=${total_lines:-0}
 
     if [ "$has_disable" -gt 0 ]; then
       optimized=$((optimized + 1))
       echo "  ✅ /$name — disable-model-invocation: true (экономия токенов)"
-    elif [ "$bash_lines" -gt 3 ] && [ "$analysis_lines" -lt 2 ]; then
+    elif [ "$bash_lines" -gt 5 ] && [ "$analysis_lines" -lt 3 ] && [ "$total_lines" -lt 80 ]; then
       unoptimized=$((unoptimized + 1))
       echo "  🟡 /$name — command-runner, но без disable-model-invocation"
       echo "     → Добавь 'disable-model-invocation: true' в frontmatter"

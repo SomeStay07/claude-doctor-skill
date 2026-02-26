@@ -29,7 +29,7 @@ for section in "quick start|getting started" "architecture|structure" "critical|
 done
 
 # Проверить наличие блоков кода (готовых к копированию):
-code_blocks=$(grep -c '```' CLAUDE.md 2>/dev/null || echo 0)
+code_blocks=$(grep -c '```' CLAUDE.md 2>/dev/null); code_blocks=${code_blocks:-0}
 echo "Code blocks: $((code_blocks / 2))"
 
 # Антипаттерн: слишком много строк = раздутый файл
@@ -95,7 +95,7 @@ for entry in \
       dep_count=$(node -p "try{const p=require('./package.json');Object.keys(p.dependencies||{}).length+Object.keys(p.devDependencies||{}).length}catch(e){0}" 2>/dev/null || echo "?")
       echo "  ✅ $file ($dep_count dependencies)"
     else
-      deps=$(grep -cvE '^\s*$|^\s*#' "$file" 2>/dev/null || echo 0)
+      deps=$(grep -cvE '^\s*$|^\s*#' "$file" 2>/dev/null); deps=${deps:-0}
       echo "  ✅ $file ($deps non-empty lines)"
     fi
   fi
@@ -191,7 +191,7 @@ if [[ -f Makefile ]]; then
   echo "  Documented: $help_count / $targets_count targets"
 
   # Проверить наличие переменных в начале файла:
-  vars=$(head -10 Makefile | grep -cE '^[A-Z_]+ *[:?]?=' || echo 0)
+  vars=$(head -10 Makefile | grep -cE '^[A-Z_]+ *[:?]?=' 2>/dev/null); vars=${vars:-0}
   echo "  Variables defined: $vars"
 fi
 
@@ -320,7 +320,7 @@ if [ -f requirements.txt ] || [ -f pyproject.toml ]; then
     fi
   fi
   if [ -f requirements.txt ]; then
-    unpinned=$(grep -cvE '^\s*$|^\s*#|==|>=|~=' requirements.txt 2>/dev/null || echo 0)
+    unpinned=$(grep -cvE '^\s*$|^\s*#|==|>=|~=' requirements.txt 2>/dev/null); unpinned=${unpinned:-0}
     [ "$unpinned" -gt 0 ] && echo "  ⚠️ $unpinned deps without version pin → pip freeze > requirements.txt" \
       || echo "  ✅ All deps pinned in requirements.txt"
   fi

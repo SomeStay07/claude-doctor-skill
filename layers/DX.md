@@ -120,8 +120,9 @@ fi
 
 ```bash
 echo "=== Stop hook ==="
-settings=".claude/settings.json"
-if [ -f "$settings" ]; then
+settings=""
+for sf in .claude/settings.local.json .claude/settings.json; do [ -f "$sf" ] && settings="$sf" && break; done
+if [ -n "$settings" ]; then
   if grep -q '"Stop"' "$settings" 2>/dev/null; then
     echo "  ✅ Stop hook configured"
     # Find stop hook scripts (search for .sh files referenced in Stop section):

@@ -1,5 +1,27 @@
 # Changelog
 
+## v2.5.0 — Field Tested (9 fixes from real-world testing)
+
+Протестировано на 3 реальных проектах: cherry-cast (Python/Docker), telegram-crypto-info (Python/Makefile), telegram-ios-academy-foundation-pro (pnpm monorepo).
+
+### 🔴 Critical fixes
+- `settings.local.json` ignored — Doctor checked only `settings.json`, missing Claude Code's preferred local config (CONTEXT.md, DX.md, QUALITY-EXTRA.md, MATURITY.md)
+- `grep -c ... || echo 0` produces "0\n0" — grep outputs "0" AND exits 1, so `|| echo 0` appends extra "0" (SECURITY.md, FOUNDATION.md, INTELLIGENCE.md, SECURITY-EXTRA.md, DX-EXTRA.md — 13 locations)
+
+### 🟠 Important fixes
+- `.env.example` flagged as leaked secret — added `grep -vE '\.(example|sample|template)'` filter (SECURITY.md)
+- Docker `ENV VAR=${BUILD_ARG}` flagged as hardcoded secret — added `grep -v '=\${'` filter (SECURITY-EXTRA.md)
+- Hook detection missed `.py` hooks — `.claude/hooks/*.sh` → `.claude/hooks/*` (QUALITY.md)
+
+### 🟡 Minor fixes
+- Missing AI API keys: GEMINI, MISTRAL, DEEPSEEK, COHERE, REPLICATE (SECURITY-EXTRA.md)
+- Monorepo Prisma migrations not found — added `find -maxdepth 4 -name migrations` fallback (FOUNDATION-EXTRA.md)
+- Linter detection missed installed-but-unconfigured linters — added `command -v` fallback (MATURITY.md)
+- Skill classifier false positives on complex skills — raised thresholds, added more LLM keywords, added total_lines check (DX-EXTRA.md)
+
+### Updated
+- install.sh: version 2.5.0
+
 ## v2.4.1 — Precision Hotfix (12 fixes)
 
 ### 🔴 Critical fixes

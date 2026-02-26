@@ -103,12 +103,12 @@ for settings_file in ".claude/settings.json" ".claude/settings.local.json"; do
         echo "     matcher: Edit|Write ✅"
       fi
       # Check settings + hook scripts for format & syntax:
-      if grep -ql "format" "$settings_file" .claude/hooks/*.sh 2>/dev/null; then
+      if grep -ql "format" "$settings_file" .claude/hooks/* 2>/dev/null; then
         echo "     format: ✅"
       else
         echo "     format: ⚠️ no formatting in hook"
       fi
-      if grep -qlE "py_compile|tsc|--check" "$settings_file" .claude/hooks/*.sh 2>/dev/null; then
+      if grep -qlE "py_compile|tsc|--check" "$settings_file" .claude/hooks/* 2>/dev/null; then
         echo "     syntax check: ✅"
       else
         echo "     syntax check: ⚠️ no syntax validation"
@@ -120,7 +120,7 @@ for settings_file in ".claude/settings.json" ".claude/settings.local.json"; do
 done
 
 # Check hook script is executable:
-for hook_script in .claude/hooks/*.sh; do
+for hook_script in .claude/hooks/*; do
   if [ -f "$hook_script" ]; then
     if [ -x "$hook_script" ]; then
       echo "  ✅ $hook_script (executable)"

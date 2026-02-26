@@ -24,7 +24,7 @@ if [ "$branch_count" -le 1 ]; then
   echo "  ⚠️ Only 1 branch — всё коммитится прямо в main"
 else
   echo "  ✅ $branch_count branches exist"
-  good_names=$(git branch -a 2>/dev/null | grep -cE 'feature/|fix/|chore/|hotfix/|release/' || echo 0)
+  good_names=$(git branch -a 2>/dev/null | grep -cE 'feature/|fix/|chore/|hotfix/|release/' 2>/dev/null); good_names=${good_names:-0}
   [ "$good_names" -gt 0 ] && echo "  ✅ Branch naming convention ($good_names named branches)"
 fi
 
@@ -302,9 +302,9 @@ PostToolUse ловит ошибки ПОСЛЕ записи. PreToolUse **пре
 
 ```bash
 echo "=== PreToolUse hooks ==="
-settings=".claude/settings.json"
-
-if [ ! -f "$settings" ]; then
+settings=""
+for sf in .claude/settings.local.json .claude/settings.json; do [ -f "$sf" ] && settings="$sf" && break; done
+if [ -z "$settings" ]; then
   echo "  ❌ No .claude/settings.json"
 else
   # Check for PreToolUse hooks:

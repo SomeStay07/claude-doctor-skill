@@ -24,7 +24,7 @@ git remote -v 2>/dev/null | head -1  # проверь Visibility в Settings →
 echo "=== Git ==="
 if [ -d .git ]; then
   echo "  ✅ Git initialized"
-  commit_count=$(git rev-list --count HEAD 2>/dev/null || echo 0)
+  commit_count=$(git rev-list --count HEAD 2>/dev/null);
   if [ "$commit_count" -gt 0 ]; then
     echo "  ✅ $commit_count commits"
     last_commit=$(git log --oneline -1 2>/dev/null)
@@ -37,7 +37,7 @@ if [ -d .git ]; then
   if [ -n "$remote" ]; then
     echo "  ✅ Remote: $remote"
     # Check if pushed:
-    behind=$(git rev-list --count HEAD --not --remotes 2>/dev/null || echo 0)
+    behind=$(git rev-list --count HEAD --not --remotes 2>/dev/null);
     if [ "$behind" -gt 0 ]; then
       echo "  ⚠️ $behind unpushed commits — нет удалённого бэкапа"
     fi
@@ -152,7 +152,7 @@ fi
 # Check for ANY sensitive files in git:
 git ls-files | grep -iE \
   '\.env|\.pem|\.key|\.p12|\.pfx|\.jks|id_rsa|id_ed25519|credentials|secret|\.pypirc|\.npmrc|\.tfstate|\.sql\.gz|\.dump' \
-  2>/dev/null
+  2>/dev/null | grep -vE '\.(example|sample|template)$'
 ```
 
 ### Типичные секретные файлы по экосистемам
@@ -272,8 +272,8 @@ grep -rn -E "^export[[:space:]]+[A-Z_]*(KEY|SECRET|TOKEN|PASSWORD|CREDENTIAL)[[:
 [[ -f .env.example ]] && echo "✅ EXISTS" || echo "❌ MISSING .env.example"
 
 # Documentation quality (comments vs vars ratio):
-comments=$(grep -c '^#' .env.example 2>/dev/null || echo 0)
-vars=$(grep -cE '^[A-Z_]+=' .env.example 2>/dev/null || echo 0)
+comments=$(grep -c '^#' .env.example 2>/dev/null); comments=${comments:-0}
+vars=$(grep -cE '^[A-Z_]+=' .env.example 2>/dev/null); vars=${vars:-0}
 [[ $vars -gt 0 ]] && ratio=$((comments * 100 / vars)) || ratio=0
 echo "Комментариев: $comments, Переменных: $vars (${ratio}% покрытие)"
 [[ $ratio -lt 50 ]] && echo "⚠️ Мало документации" || echo "✅ Задокументировано"

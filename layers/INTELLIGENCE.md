@@ -27,11 +27,11 @@ if [ -d "$agents_dir" ]; then
     tools=$(grep -m1 '^tools:' "$f" | sed 's/tools:[[:space:]]*//')
     model=$(grep -m1 '^model:' "$f" | sed 's/model:[[:space:]]*//')
     # Описание: проверить наличие (может быть многострочным с |)
-    has_desc=$(grep -c '^description' "$f" || echo 0)
+    has_desc=$(grep -c '^description' "$f" 2>/dev/null); has_desc=${has_desc:-0}
     echo "  📋 $name"
     if [ "$has_desc" -gt 0 ]; then
       # Качество описания: примеры улучшают авто-делегацию
-      has_examples=$(grep -c '<example>' "$f" 2>/dev/null || echo 0)
+      has_examples=$(grep -c '<example>' "$f" 2>/dev/null); has_examples=${has_examples:-0}
       if [ "$has_examples" -gt 0 ]; then
         echo "     desc: ✅ ($has_examples примеров)"
       else
@@ -128,7 +128,7 @@ if [ -d "$rules_dir" ]; then
   for f in "$rules_dir"/*.md; do
     [ ! -f "$f" ] && continue
     name=$(basename "$f" .md)
-    has_paths=$(grep -c '^paths:' "$f" 2>/dev/null || echo 0)
+    has_paths=$(grep -c '^paths:' "$f" 2>/dev/null); has_paths=${has_paths:-0}
     lines=$(wc -l < "$f" | tr -d ' ')
     if [ "$has_paths" -gt 0 ]; then
       paths=$(grep -A5 '^paths:' "$f" | grep "'" | head -3 | tr -d "' -" | tr '\n' ', ')

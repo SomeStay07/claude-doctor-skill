@@ -45,6 +45,12 @@ if [ "$has_linter" = false ] && [ -f pyproject.toml ]; then
     has_linter=true; maturity_score=$((maturity_score + 1))
   }
 fi
+# Проверить установленные линтеры (конфиг может быть в defaults):
+if [ "$has_linter" = false ]; then
+  for cmd in ruff eslint pylint flake8 biome golangci-lint clippy; do
+    command -v "$cmd" &>/dev/null && { has_linter=true; maturity_score=$((maturity_score + 1)); break; }
+  done
+fi
 
 # 5. CI
 if [ -d .github/workflows ] || [ -f .gitlab-ci.yml ] || [ -f .circleci/config.yml ] || [ -f Jenkinsfile ]; then
@@ -85,7 +91,7 @@ elif [ "$has_tests" = true ] && [ "$has_linter" = true ] && { [ "$has_ci" = true
     has_cc_automation=false
     [ -d .claude/agents ] && has_cc_automation=true
     [ -d .claude/skills ] && has_cc_automation=true
-    [ -f .claude/settings.json ] && grep -q '"hooks"' .claude/settings.json 2>/dev/null && has_cc_automation=true
+    for sf in .claude/settings.json .claude/settings.local.json; do [ -f "$sf" ] && grep -q '"hooks"' "$sf" 2>/dev/null && has_cc_automation=true; done
     [ "$has_cc_automation" = true ] && level="pro" || level="mature"
   else
     level="mature"

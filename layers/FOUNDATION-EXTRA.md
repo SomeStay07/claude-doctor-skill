@@ -73,11 +73,19 @@ else
     echo "  ✅ TypeORM"
   fi
 
-  # Generic migrations dir:
-  if [ "$migration_found" = false ] && [ -d migrations ]; then
-    migration_found=true
-    mig_count=$(find migrations \( -name "*.sql" -o -name "*.py" -o -name "*.js" \) 2>/dev/null | wc -l | tr -d ' ')
-    echo "  ✅ migrations/ ($mig_count файлов)"
+  # Generic migrations dir (root or monorepo subdirs):
+  if [ "$migration_found" = false ]; then
+    mig_dir=""
+    if [ -d migrations ]; then
+      mig_dir="migrations"
+    else
+      mig_dir=$(find . -maxdepth 4 -type d -name migrations 2>/dev/null | head -1)
+    fi
+    if [ -n "$mig_dir" ]; then
+      migration_found=true
+      mig_count=$(find "$mig_dir" \( -name "*.sql" -o -name "*.py" -o -name "*.js" \) 2>/dev/null | wc -l | tr -d ' ')
+      echo "  ✅ $mig_dir/ ($mig_count файлов)"
+    fi
   fi
 
   if [ "$migration_found" = false ]; then
