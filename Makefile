@@ -2,8 +2,8 @@
 
 FILES = SKILL.md GUARDRAILS.md CHECKLIST.md \
         layers/SECURITY.md layers/SECURITY-EXTRA.md \
-        layers/FOUNDATION.md \
-        layers/QUALITY.md layers/QUALITY-EXTRA.md \
+        layers/FOUNDATION.md layers/FOUNDATION-EXTRA.md \
+        layers/QUALITY.md layers/QUALITY-EXTRA.md layers/QUALITY-PROD.md \
         layers/INTELLIGENCE.md \
         layers/CONTEXT.md \
         layers/DX.md layers/DX-EXTRA.md \

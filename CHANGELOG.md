@@ -1,5 +1,47 @@
 # Changelog
 
+## v2.3.0 — Quality Release (10 bug fixes)
+
+### Bug fixes
+- **W20**: BSD grep on macOS — `grep \|` → `grep -E |` for CLAUDE.md section detection (FOUNDATION.md)
+- **W35**: Memory file path — replaced broken `tr '/' '-'` hash with `find`-based discovery (CONTEXT.md)
+- **W45**: `readlink -f` portability — replaced with `readlink` (macOS-compatible) (QUALITY.md)
+- **W25/W44**: Source directory detection — expanded from 4 to 14 directories across 10 layer files
+- **W7**: False positive list — added uv, pnpm, bun, husky, monorepo patterns (GUARDRAILS.md)
+- **W11**: Error monitoring tag — `[core]` → `[quality]`, Starter 19→18 checks (CHECKLIST.md, QUALITY-PROD.md)
+- **W43**: N/A scoring rule — explicit "N/A excludes from both score AND max" (MATURITY.md)
+- **W39**: Growing→Mature boundary — softened to accept tests+linter+env without CI (MATURITY.md)
+- **W26**: Empty catch detection — now catches multi-line `catch(e) {\n}` blocks (QUALITY.md)
+- **W37**: Smoke test safety — import no longer runs automatically, deferred to Phase 5 (DX.md)
+
+### Updated
+- Maturity counts: Starter 18, Growing 27, Mature 34, Pro 46
+- install.sh: version 2.3.0
+- BSD grep `\|` → `-E |` across all layer files
+
+## v2.2.0 — Vibe Coder Essentials
+
+### New checks (42 → 46)
+- **0l. AI API cost protection** `[core]` — detects AI API keys, checks max_tokens in API calls, dev/prod key separation
+- **0m. Backup strategy** `[advanced]` — detects managed DB providers, backup scripts, warns if DB exists without backups
+- **1g. DB migrations** `[quality]` — detects database presence, checks for migration tools (alembic/prisma/drizzle/knex)
+- **2l. Error monitoring** `[quality]` — detects Sentry/LogRocket/Highlight SDK, checks SENTRY_DSN in .env.example
+
+### New files
+- **FOUNDATION-EXTRA.md** — advanced foundation checks (1g DB migrations)
+- **QUALITY-PROD.md** — production quality checks (2l error monitoring)
+
+### Improvements to existing checks
+- **3a. Agents** — recommends `model: haiku` for read-only agents without model field
+- **5a. Skills** — checks `allowed-tools` in skills, detects missing `.claude/launch.json` for frontend projects
+
+### Updated
+- Maturity counts: Starter 19, Growing 27, Mature 34, Pro 46
+- install.sh: downloads 15 files (was 13), version 2.2.0
+- Makefile: FILES includes FOUNDATION-EXTRA.md + QUALITY-PROD.md
+- README.md: all counts updated, repository structure updated
+- CHECKLIST.md: tag table updated (19 core + 8 quality + 7 advanced + 12 cc = 46)
+
 ## v2.1.0 — Modular Architecture
 
 ### New files

@@ -4,19 +4,19 @@
 
 # Doctor
 
-**42 automated checks across 6 layers. Adaptive scoring. Security first.**
+**46 automated checks across 6 layers. Adaptive scoring. Security first.**
 
 *A Claude Code skill that scans any project, auto-detects maturity level, and diagnoses automation gaps — missing security checks, broken hooks, absent tests, misconfigured CI. Adapts scoring to your project's stage: beginners get encouragement, experts get depth.*
 
 [![Claude Code](https://img.shields.io/badge/Claude_Code-Skill-7C3AED?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiIGZpbGw9IndoaXRlIi8+PC9zdmc+)](https://docs.anthropic.com/en/docs/claude-code/)
-[![Checks](https://img.shields.io/badge/Checks-42-blue?style=for-the-badge)](https://github.com/SomeStay07/claude-doctor-skill#6-layers-42-checks)
-[![Layers](https://img.shields.io/badge/Layers-6-orange?style=for-the-badge)](https://github.com/SomeStay07/claude-doctor-skill#6-layers-42-checks)
+[![Checks](https://img.shields.io/badge/Checks-46-blue?style=for-the-badge)](https://github.com/SomeStay07/claude-doctor-skill#6-layers-46-checks)
+[![Layers](https://img.shields.io/badge/Layers-6-orange?style=for-the-badge)](https://github.com/SomeStay07/claude-doctor-skill#6-layers-46-checks)
 [![Adaptive](https://img.shields.io/badge/Adaptive_Scoring-4_Levels-10B981?style=for-the-badge)](https://github.com/SomeStay07/claude-doctor-skill#adaptive-scoring)
 [![Stacks](https://img.shields.io/badge/Stacks-20+-teal?style=for-the-badge)](https://github.com/SomeStay07/claude-doctor-skill#multi-stack-support)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22C55E?style=for-the-badge)](LICENSE)
 [![Telegram](https://img.shields.io/badge/Telegram-Channel-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/codeonvibes)
 
-[What It Does](#what-it-does) · [Adaptive Scoring](#adaptive-scoring) · [6 Layers](#6-layers-42-checks) · [Install](#installation) · [Usage](#usage) · [How It Works](#how-it-works) · [Example Output](#example-output) · [FAQ](#faq) · [Contributing](#contributing)
+[What It Does](#what-it-does) · [Adaptive Scoring](#adaptive-scoring) · [6 Layers](#6-layers-46-checks) · [Install](#installation) · [Usage](#usage) · [How It Works](#how-it-works) · [Example Output](#example-output) · [FAQ](#faq) · [Contributing](#contributing)
 
 Just `.md` files — install in 5 seconds:
 
@@ -55,7 +55,7 @@ Every finding is **project-specific** (not a generic template) and explains **WH
 <br>
 <img src="assets/demo-scan.gif" alt="doctor scan demo — diagnosing project health" width="800">
 <br>
-<sub>Phase 1-2: Study your project, run 42 checks, score each layer</sub>
+<sub>Phase 1-2: Study your project, run 46 checks, score each layer</sub>
 <br><br>
 </div>
 
@@ -71,7 +71,7 @@ Every finding is **project-specific** (not a generic template) and explains **WH
 
 ## At a Glance
 
-- 42 checks across 6 security & automation layers
+- 46 checks across 6 security & automation layers
 - Auto-discovers your stack (20+ languages/frameworks) before any checks
 - Every finding has severity + WHY + source link — no vague advice
 - Applies project-specific fixes (not generic templates)
@@ -84,7 +84,7 @@ Every finding is **project-specific** (not a generic template) and explains **WH
 
 | Feature | Doctor | [memory-skill](https://github.com/SomeStay07/claude-memory-skill) | [code-reviewer](https://github.com/SomeStay07/code-review-agent) |
 |:--------|:------:|:------------:|:---------------:|
-| Total checks | **42** | N/A | N/A |
+| Total checks | **46** | N/A | N/A |
 | Layers | **6** | 1 | 1 |
 | Auto-discovery (DCI) | **Yes** | Yes | No |
 | Error recovery | **Yes** | No | Yes |
@@ -92,7 +92,7 @@ Every finding is **project-specific** (not a generic template) and explains **WH
 | False positive filtering | **14 rules** | No | Yes |
 | Incident response | **9-step plan** | No | No |
 | Multi-stack | **20+** | No | TypeScript/React |
-| Security audit | **11 checks** | No | Partial |
+| Security audit | **13 checks** | No | Partial |
 | Scoring & grading | **Yes** | No | No |
 | One-line install | **Yes** | Yes | Yes |
 
@@ -102,12 +102,12 @@ Doctor auto-detects your project's maturity and adapts everything — which chec
 
 | Level | Detected when | Checks scored | Description |
 |:------|:-------------|:-------------:|:------------|
-| Starter 🌱 | No git, or no tests/CI/linter | 17 | Core checks only — security + foundations |
-| Growing 🌿 | Git + deps + (tests or linter) | 24 | Adds quality gate checks |
-| Mature 🌳 | CI + tests + linter + env | 30 | Adds advanced practices |
-| Pro ⚡ | Mature + Claude Code automation | 42 | All checks including CC-specific |
+| Starter 🌱 | No git, or no tests/CI/linter | 18 | Core checks only — security + foundations |
+| Growing 🌿 | Git + deps + (tests or linter) | 27 | Adds quality gate checks |
+| Mature 🌳 | Tests + linter + (CI or env) | 34 | Adds advanced practices |
+| Pro ⚡ | Mature + Claude Code automation | 46 | All checks including CC-specific |
 
-**Why?** Without adaptive scoring, a beginner with no Claude Code gets 14 red crosses (33% of checks) for things they don't even use. That's not a fair audit — it's a wall of shame. Now: beginners see only relevant checks, scored with encouraging labels ("Начало пути" instead of "ПЛОХО").
+**Why?** Without adaptive scoring, a beginner with no Claude Code gets 27 red crosses (59% of checks) for things they don't even use. That's not a fair audit — it's a wall of shame. Now: beginners see only relevant checks, scored with encouraging labels ("Начало пути" instead of "ПЛОХО").
 
 ### Weighted Layer Scoring
 
@@ -131,25 +131,25 @@ Don't have time for a full audit? Run `/doctor quick` for just your maturity lev
 ```
 QUICK AUDIT (Growing 🌿)
 ════════════════════════════
-Core score: 14/17 (82%)
+Core score: 15/19 (79%)
 
 TOP-3 PRIORITIES:
 1. 🔴 chmod 600 .env — secrets are world-readable
 2. 🟠 Add pre-commit hook — broken code reaches git
 3. 🟡 Add .env.example — new devs can't onboard
 
-→ /doctor for full audit (42 checks)
+→ /doctor for full audit (46 checks)
 ```
 
-## 6 Layers, 42 Checks
+## 6 Layers, 46 Checks
 
 Layers are ordered by priority — you can't work on DX if Security is broken:
 
 | Layer | Name | Checks | What It Covers |
 |:------|:-----|:------:|:---------------|
-| 0 | **Security** | 11 | Secrets in git, SAST, .gitignore, .env permissions, Docker security, client-side keys, incident response |
-| 1 | **Foundation** | 6 | CLAUDE.md, README.md, dependency manifest, build scripts, project structure, dep freshness |
-| 2 | **Quality Gates** | 11 | Linter, PostToolUse/PreToolUse hooks, pre-commit, CI, error handling, types, coverage |
+| 0 | **Security** | 13 | Secrets in git, SAST, .gitignore, .env permissions, Docker security, client-side keys, AI API cost protection, backup strategy, incident response |
+| 1 | **Foundation** | 7 | CLAUDE.md, README.md, dependency manifest, build scripts, project structure, dep freshness, DB migrations |
+| 2 | **Quality Gates** | 12 | Linter, PostToolUse/PreToolUse hooks, pre-commit, CI, error handling, types, coverage, error monitoring |
 | 3 | **Intelligence** | 2 | Agent trio (code-reviewer, debugger, architect), domain rules with `paths:` |
 | 4 | **Context** | 5 | MCP servers, plugins (context7, episodic-memory), memory files, SessionStart hook |
 | 5 | **DX** | 7 | Skills (/test, /status), hook installer, Dependabot, stop hook, unit & smoke tests |
@@ -223,7 +223,7 @@ Doctor is just `.md` files — no binaries, no plugins, no API keys. Drop them i
 curl -sSL https://raw.githubusercontent.com/SomeStay07/claude-doctor-skill/main/install.sh | bash
 ```
 
-The installer downloads 13 `.md` files into `.claude/skills/doctor/` and verifies each one.
+The installer downloads 15 `.md` files into `.claude/skills/doctor/` and verifies each one.
 
 > Want to inspect the script first? [View install.sh on GitHub](https://github.com/SomeStay07/claude-doctor-skill/blob/main/install.sh) — it only creates a directory and downloads `.md` files.
 
@@ -240,7 +240,7 @@ curl -sO https://raw.githubusercontent.com/SomeStay07/claude-doctor-skill/main/C
 
 # Layer details
 cd layers
-for f in SECURITY SECURITY-EXTRA FOUNDATION QUALITY QUALITY-EXTRA INTELLIGENCE CONTEXT DX DX-EXTRA MATURITY; do
+for f in SECURITY SECURITY-EXTRA FOUNDATION FOUNDATION-EXTRA QUALITY QUALITY-EXTRA QUALITY-PROD INTELLIGENCE CONTEXT DX DX-EXTRA MATURITY; do
   curl -sO "https://raw.githubusercontent.com/SomeStay07/claude-doctor-skill/main/layers/$f.md"
 done
 ```
@@ -440,13 +440,15 @@ An audit isn't done until:
 claude-doctor-skill/
 ├── SKILL.md             — Brain: protocol, subcommands (< 250 lines)
 ├── GUARDRAILS.md        — Output format, error recovery, self-check
-├── CHECKLIST.md         — Index of all 42 checks across 6 layers
+├── CHECKLIST.md         — Index of all 46 checks across 6 layers
 ├── layers/
 │   ├── SECURITY.md        — Layer 0: core security (0a-0i)
-│   ├── SECURITY-EXTRA.md  — Layer 0: advanced security (0j-0k + incident)
-│   ├── FOUNDATION.md      — Layer 1: 6 foundation checks
+│   ├── SECURITY-EXTRA.md  — Layer 0: advanced security (0j-0m + incident)
+│   ├── FOUNDATION.md      — Layer 1: 6 core foundation checks
+│   ├── FOUNDATION-EXTRA.md — Layer 1: advanced foundation (1g DB migrations)
 │   ├── QUALITY.md         — Layer 2: 6 core quality checks
 │   ├── QUALITY-EXTRA.md   — Layer 2: 5 advanced quality checks
+│   ├── QUALITY-PROD.md    — Layer 2: production quality (2l error monitoring)
 │   ├── INTELLIGENCE.md    — Layer 3: 2 agent intelligence checks
 │   ├── CONTEXT.md         — Layer 4: 5 context & memory checks
 │   ├── DX.md              — Layer 5: core DX (5a-5d)
@@ -520,7 +522,7 @@ Doctor uses **weighted scoring** adapted to your project's maturity level. Each 
 <summary><b>I'm a beginner — is this tool for me?</b></summary>
 <br>
 
-Yes! Run `/doctor quick` for just your top 3 priorities in 30 seconds. Doctor auto-detects that you're at Starter level and only scores 17 core checks (security + foundations). No Claude Code jargon, no overwhelming red crosses — just actionable steps with beginner-friendly explanations.
+Yes! Run `/doctor quick` for just your top 3 priorities in 30 seconds. Doctor auto-detects that you're at Starter level and only scores 18 core checks (security + foundations). No Claude Code jargon, no overwhelming red crosses — just actionable steps with beginner-friendly explanations.
 </details>
 
 <details>

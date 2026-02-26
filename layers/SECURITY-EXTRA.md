@@ -166,6 +166,144 @@ fi
 
 ---
 
+## 0l. AI API cost protection — защита от разорения (~5 мин) [core]
+<!-- glossary: billing alerts = уведомления при превышении лимита расходов на AI API -->
+
+Вайбкодеры используют OpenAI/Anthropic/Google AI без лимитов. Зацикленный агент без `max_tokens` = $500 за ночь. Billing alerts — единственная страховка.
+
+- [ ] **Billing alerts настроены** — лимит расходов на дашборде провайдера
+- [ ] **max_tokens указан** — в API-вызовах есть ограничение длины ответа
+- [ ] **Dev/prod ключи раздельные** — разные API ключи для разработки и production
+
+### Команды проверки
+
+```bash
+echo "=== AI API cost protection ==="
+ai_api_found=false
+
+# Детекция AI API ключей:
+for key_name in OPENAI_API_KEY ANTHROPIC_API_KEY GOOGLE_AI_API_KEY GROQ_API_KEY TOGETHER_API_KEY; do
+  if grep -q "$key_name" .env.example .env 2>/dev/null; then
+    ai_api_found=true
+    echo "  📡 $key_name обнаружен"
+  fi
+done
+
+if [ "$ai_api_found" = false ]; then
+  echo "  🔵 AI API ключи не обнаружены — пропускаем"
+else
+  # Проверка max_tokens в коде:
+  src_dirs=""
+  for d in src app lib bot server backend api core pkg cmd internal services packages; do [ -d "$d" ] && src_dirs="$src_dirs $d"; done
+  if [ -n "$src_dirs" ]; then
+    api_calls=$(grep -rn "chat.completions.create\|messages.create\|generate_content" "$src_dirs" 2>/dev/null | wc -l | tr -d ' ')
+    max_tokens=$(grep -rn "max_tokens\|max_output_tokens\|maxOutputTokens" "$src_dirs" 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$api_calls" -gt 0 ]; then
+      if [ "$max_tokens" -gt 0 ]; then
+        echo "  ✅ max_tokens указан ($max_tokens из $api_calls вызовов)"
+      else
+        echo "  🔴 $api_calls API-вызовов БЕЗ max_tokens — зацикленный агент = неограниченные расходы"
+        echo "     → Добавь max_tokens в каждый вызов"
+      fi
+    fi
+  fi
+
+  # Проверка раздельных ключей:
+  for key_name in OPENAI_API_KEY ANTHROPIC_API_KEY; do
+    if grep -q "$key_name" .env.example 2>/dev/null; then
+      if grep -qE "${key_name}_(DEV|PROD|STAGING)" .env.example 2>/dev/null; then
+        echo "  ✅ Раздельные $key_name для окружений"
+      else
+        echo "  🟡 Один $key_name для всех окружений — dev-баг тратит production-бюджет"
+      fi
+    fi
+  done
+
+  echo "  💡 Настрой billing alerts: OpenAI → Settings → Billing → Usage limits"
+  echo "     Anthropic → Settings → Plans & Billing → Spend notifications"
+fi
+```
+
+> https://platform.openai.com/docs/guides/production-best-practices
+> https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
+
+---
+
+## 0m. Backup strategy — данные не потеряются (~5 мин) [advanced]
+<!-- glossary: backup = резервная копия данных, позволяющая восстановиться после сбоя или ошибки -->
+
+Git бэкапит код, но НЕ данные. Managed DB (Railway, Supabase, RDS) включает бэкапы автоматически. Self-hosted DB без бэкапов — один `DROP TABLE` от катастрофы.
+
+- [ ] **Managed DB или backup скрипт** — бэкапы включены автоматически или есть скрипт
+- [ ] **Git remote настроен** — код в облаке (проверяется в 0a)
+
+### Команды проверки
+
+```bash
+echo "=== Backup strategy ==="
+
+# Git remote (ref: check 0a):
+if git remote -v 2>/dev/null | grep -q "push"; then
+  echo "  ✅ Git remote настроен (код бэкапится)"
+else
+  echo "  🔴 Нет git remote — код только на локальной машине"
+fi
+
+# Managed DB detection:
+db_detected=false
+managed_backup=false
+
+# Railway:
+if grep -rqiE "railway|RAILWAY_" .env .env.example Procfile railway.toml 2>/dev/null; then
+  managed_backup=true; db_detected=true
+  echo "  ✅ Railway — автоматические бэкапы БД включены"
+fi
+# Supabase:
+if grep -rqiE "supabase|SUPABASE_" .env .env.example 2>/dev/null; then
+  managed_backup=true; db_detected=true
+  echo "  ✅ Supabase — автоматические бэкапы включены"
+fi
+# Neon:
+if grep -rqiE "neon\.tech|NEON_" .env .env.example 2>/dev/null; then
+  managed_backup=true; db_detected=true
+  echo "  ✅ Neon — point-in-time recovery включён"
+fi
+# PlanetScale:
+if grep -rqiE "planetscale|PLANETSCALE_" .env .env.example 2>/dev/null; then
+  managed_backup=true; db_detected=true
+  echo "  ✅ PlanetScale — автоматические бэкапы"
+fi
+
+# Backup scripts:
+backup_script=false
+for f in scripts/backup* backup* scripts/*dump*; do
+  if [ -f "$f" ] 2>/dev/null; then
+    backup_script=true
+    echo "  ✅ Backup script: $f"
+  fi
+done
+
+# Self-hosted DB without backup:
+if [ "$db_detected" = false ]; then
+  src_dirs=""
+  for d in src app lib bot server backend api core pkg cmd internal services packages; do [ -d "$d" ] && src_dirs="$src_dirs $d"; done
+  if [ -n "$src_dirs" ]; then
+    grep -rqE "asyncpg|psycopg|prisma|mongoose|sqlalchemy" "$src_dirs" 2>/dev/null && db_detected=true
+  fi
+fi
+
+if [ "$db_detected" = true ] && [ "$managed_backup" = false ] && [ "$backup_script" = false ]; then
+  echo "  🟠 БД есть, но бэкапов НЕТ"
+  echo "     → Managed DB (Railway/Supabase/Neon) включает бэкапы автоматически"
+  echo "     → Self-hosted: pg_dump + cron или scripts/backup.sh"
+fi
+```
+
+> https://docs.railway.com/guides/backups
+> https://supabase.com/docs/guides/platform/backups
+
+---
+
 ## Если секреты утекли — план действий
 
 1. **СТОП** — не коммить ничего нового

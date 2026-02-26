@@ -93,7 +93,7 @@ if [ -f requirements.txt ] || [ -f pyproject.toml ]; then
 
   # Type annotations:
   src_dirs=""
-  for d in bot src app lib; do [ -d "$d" ] && src_dirs="$src_dirs $d"; done
+  for d in src app lib bot server backend api core pkg cmd internal services packages; do [ -d "$d" ] && src_dirs="$src_dirs $d"; done
   if [ -n "$src_dirs" ]; then
     total=$(grep -rn "def " --include="*.py" "$src_dirs" 2>/dev/null | wc -l | tr -d ' ')
     typed=$(grep -rn "def .*->.*:" --include="*.py" "$src_dirs" 2>/dev/null | wc -l | tr -d ' ')
@@ -222,7 +222,7 @@ echo "=== Production logging ==="
 # Python — print() in source:
 if [ -f requirements.txt ] || [ -f pyproject.toml ]; then
   src_dirs=""
-  for d in bot src app lib; do
+  for d in src app lib bot server backend api core pkg cmd internal services packages; do
     [ -d "$d" ] && src_dirs="$src_dirs $d"
   done
   if [ -n "$src_dirs" ]; then
@@ -251,7 +251,7 @@ fi
 # Node.js — console.log in source:
 if [ -f package.json ]; then
   src_dirs=""
-  for d in src app lib; do
+  for d in src app lib bot server backend api core pkg cmd internal services packages; do
     [ -d "$d" ] && src_dirs="$src_dirs $d"
   done
   if [ -n "$src_dirs" ]; then
@@ -388,3 +388,7 @@ CI (опционально)     Full test suite + lint         ~3 min       Forc
 - `--no-verify` обходит ВСЕ хуки — единственная защита: CI
 - Secrets scan через grep имеет false negatives — для серьёзной защиты: gitleaks
 - Хуки в `.git/hooks/` не коммитятся — нужен symlink на `scripts/pre-commit.sh`
+
+---
+
+> Production-мониторинг (2l error monitoring) → [QUALITY-PROD.md](QUALITY-PROD.md)

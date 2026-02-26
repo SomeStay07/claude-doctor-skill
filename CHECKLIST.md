@@ -15,11 +15,11 @@
 
 | Тег | Значение | С какого уровня | Кол-во |
 |-----|----------|-----------------|--------|
-| `[core]` | Универсальный, нужен всем | Starter 🌱 | 17 |
-| `[quality]` | Ворота качества | Growing 🌿 | 7 |
-| `[advanced]` | Зрелые практики | Mature 🌳 | 6 |
+| `[core]` | Универсальный, нужен всем | Starter 🌱 | 18 |
+| `[quality]` | Ворота качества | Growing 🌿 | 9 |
+| `[advanced]` | Зрелые практики | Mature 🌳 | 7 |
 | `[cc]` | Claude Code specific | Pro ⚡ | 12 |
-| | | **Итого** | **42** |
+| | | **Итого** | **46** |
 
 Чеки за пределами текущего уровня отображаются как `🔮 Бонус`, но **НЕ считаются** в скор.
 
@@ -29,7 +29,7 @@
 
 Первое что проверяем. Если секреты утекут — всё остальное не имеет значения.
 
-**Краткая сводка** (11 проверок):
+**Краткая сводка** (13 проверок):
 - [ ] `[core]` Git инициализирован + есть коммиты + remote backup
 - [ ] `[core]` SAST — bandit/eslint-plugin-security/semgrep настроен (AI-код = 45% уязвимостей)
 - [ ] `[core]` Секретные файлы не в git (`.env`, `.mcp.json`, `*.pem`, `*.key`, `.npmrc`, `.pypirc`, `*.tfstate`)
@@ -41,8 +41,10 @@
 - [ ] `[core]` Превенция: pre-commit scan (gitleaks) + CI scan + GitHub secret scanning
 - [ ] `[advanced]` Docker-безопасность — `.dockerignore`, нет COPY .env, нет хардкод ENV секретов, non-root USER
 - [ ] `[advanced]` Клиентские секреты — нет API-ключей в `NEXT_PUBLIC_*` / `VITE_*` / `REACT_APP_*`
+- [ ] `[core]` AI API cost protection — billing alerts, max_tokens в вызовах, dev/prod ключи раздельные
+- [ ] `[advanced]` Backup strategy — managed DB backup или backup script, git remote + данные
 
-**Детали с командами проверки и планом действий при утечке**: [SECURITY.md](layers/SECURITY.md)
+**Детали с командами проверки и планом действий при утечке**: [SECURITY.md](layers/SECURITY.md) + [SECURITY-EXTRA.md](layers/SECURITY-EXTRA.md)
 
 ---
 
@@ -50,15 +52,16 @@
 
 Слой 0 = не навредить. Слой 1 = Claude и разработчик могут продуктивно работать.
 
-**Краткая сводка** (6 проверок):
+**Краткая сводка** (7 проверок):
 - [ ] `[core]` CLAUDE.md — существует, < 300 строк, есть Quick Start + Architecture + Critical Rules + Known Issues, команды работают
 - [ ] `[core]` Файл зависимостей — `requirements.txt` / `package.json` / `Cargo.toml` / `go.mod` существует и не пустой (20 стеков)
 - [ ] `[quality]` Скрипты сборки — Makefile / package.json / justfile с: test, lint, format, run, clean, help
 - [ ] `[core]` Структура проекта — нет mega-файлов >500 строк, код в папках, entry point понятен
 - [ ] `[quality]` Актуальность зависимостей — нет критически устаревших зависимостей, lock file существует
 - [ ] `[core]` README.md — существует, описывает проект, есть Quick Start для людей (не путать с CLAUDE.md)
+- [ ] `[quality]` Миграции БД — alembic/prisma/knex настроен (только если проект имеет БД)
 
-**Детали с командами проверки и примерами**: [FOUNDATION.md](layers/FOUNDATION.md)
+**Детали с командами проверки и примерами**: [FOUNDATION.md](layers/FOUNDATION.md) + [FOUNDATION-EXTRA.md](layers/FOUNDATION-EXTRA.md)
 
 > `.gitignore` и `.env.example` проверяются в Слое 0 (Безопасность) — там же проверяется покрытие runtime/IDE/Claude Code паттернов.
 
@@ -68,7 +71,7 @@
 
 Автоматические проверки на 3 уровнях: Claude пишет → PostToolUse, git commit → pre-commit, GitHub → CI.
 
-**Краткая сводка** (11 проверок):
+**Краткая сводка** (12 проверок):
 - [ ] `[core]` Линтер + Форматтер — ruff / eslint настроен, `make format` работает
 - [ ] `[cc]` PostToolUse хук — syntax check + auto-format при каждом Edit/Write Claude
 - [ ] `[core]` Pre-commit хук — lint + secrets scan перед коммитом (staged files only)
@@ -80,8 +83,9 @@
 - [ ] `[quality]` Покрытие кода — pytest-cov / istanbul настроен, threshold ≥60%
 - [ ] `[core]` Нет print() в продакшене — `logging` вместо `print()`, structured logging
 - [ ] `[cc]` PreToolUse хуки — pattern reminders + блокировка опасных команд (merge, rm -rf)
+- [ ] `[quality]` Error monitoring — Sentry/LogRocket/Axiom настроен, SENTRY_DSN в env
 
-**Детали с командами проверки и примерами**: [QUALITY.md](layers/QUALITY.md) + [QUALITY-EXTRA.md](layers/QUALITY-EXTRA.md)
+**Детали с командами проверки и примерами**: [QUALITY.md](layers/QUALITY.md) + [QUALITY-EXTRA.md](layers/QUALITY-EXTRA.md) + [QUALITY-PROD.md](layers/QUALITY-PROD.md)
 
 ---
 
@@ -133,7 +137,7 @@
 
 | Уровень | Применимые теги | Чеков в скоре | Остальные |
 |---------|----------------|---------------|-----------|
-| Starter 🌱 | `[core]` | 17 | 🔮 Бонус |
-| Growing 🌿 | `[core]` + `[quality]` | 24 | 🔮 Бонус |
-| Mature 🌳 | `[core]` + `[quality]` + `[advanced]` | 30 | 🔮 Бонус |
-| Pro ⚡ | Все теги | 42 | — |
+| Starter 🌱 | `[core]` | 18 | 🔮 Бонус |
+| Growing 🌿 | `[core]` + `[quality]` | 27 | 🔮 Бонус |
+| Mature 🌳 | `[core]` + `[quality]` + `[advanced]` | 34 | 🔮 Бонус |
+| Pro ⚡ | Все теги | 46 | — |

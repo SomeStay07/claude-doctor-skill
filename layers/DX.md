@@ -29,13 +29,16 @@ if [ -d "$skills_dir" ]; then
       has_triggers=${has_triggers:-0}
       has_args=$(grep -c 'ARGUMENTS' "$skill_file" 2>/dev/null)
       has_args=${has_args:-0}
+      has_tools=$(grep -c '^allowed-tools:' "$skill_file" 2>/dev/null)
+      has_tools=${has_tools:-0}
       if [ "$has_triggers" -gt 0 ] && [ "$has_args" -gt 0 ]; then
         echo "  ✅ /$name (triggers + args)"
       elif [ "$has_triggers" -gt 0 ]; then
-        echo "  ⚠️ /$name (triggers, но нет $ARGUMENTS handling)"
+        echo "  ⚠️ /$name (triggers, но нет \$ARGUMENTS handling)"
       else
         echo "  ⚠️ /$name (нет triggers — Claude не вызовет автоматически)"
       fi
+      [ "$has_tools" -eq 0 ] && echo "     ⚠️ нет allowed-tools — наследует ВСЕ инструменты"
     fi
   done
   echo "  📊 Итого: $skill_count skills"
@@ -64,6 +67,13 @@ for skill in "test" "status"; do
     echo "  ⚠️ MISSING: /$skill"
   fi
 done
+
+# launch.json для Claude Preview:
+if [ -f .claude/launch.json ]; then
+  echo "  ✅ .claude/launch.json (Claude Preview)"
+elif [ -f package.json ] && grep -qE '"(dev|start|serve)"' package.json 2>/dev/null; then
+  echo "  🔵 Нет .claude/launch.json — Claude Preview не запустит dev-сервер"
+fi
 ```
 
 ### Минимальный набор skills
@@ -184,7 +194,7 @@ fi
 
 # Find source directories:
 src_dirs=""
-for d in bot src app lib; do
+for d in src app lib bot server backend api core pkg cmd internal services packages; do
   if [ -d "$d" ]; then
     if [ -z "$src_dirs" ]; then
       src_dirs="$d"
@@ -258,7 +268,7 @@ echo "=== Smoke tests ==="
 if [ -f requirements.txt ] || [ -f pyproject.toml ]; then
   # Find main module:
   main_module=""
-  for m in bot src app; do
+  for m in src app lib bot server backend api core; do
     if [ -d "$m" ] && [ -f "$m/__init__.py" ] || [ -d "$m" ]; then
       main_module="$m"
       break
@@ -266,29 +276,21 @@ if [ -f requirements.txt ] || [ -f pyproject.toml ]; then
   done
 
   if [ -n "$main_module" ]; then
-    # Test import:
-    if python3 -c "import $main_module" 2>/dev/null; then
-      echo "  ✅ import $main_module works"
+    # ⚠️ НЕ запускай import автоматически — может иметь side effects
+    # (запуск серверов, подключение к БД, отправка писем)
+    if [ -f "$main_module/__init__.py" ]; then
+      echo "  🔵 import $main_module — проверь в Фазе 5 (может иметь side effects)"
+      echo "     → python3 -c \"import $main_module\""
     else
-      echo "  ❌ import $main_module fails"
-    fi
-  fi
-
-  # Test config:
-  if [ -f "${main_module}/config.py" ]; then
-    if python3 -c "from ${main_module}.config import load_config; load_config()" 2>/dev/null; then
-      echo "  ✅ config loads OK"
-    else
-      echo "  ⚠️ config load fails (missing .env or config.yaml?)"
+      echo "  ⚠️ $main_module/ не имеет __init__.py — не Python-пакет"
     fi
   fi
 fi
 
 # Node.js project?
 if [ -f package.json ]; then
-  if node -e "require('./src/index.js')" 2>/dev/null || node -e "require('./dist/index.js')" 2>/dev/null; then
-    echo "  ✅ main module loads"
-  fi
+  # ⚠️ НЕ запускай require автоматически — может запустить сервер
+  echo "  🔵 Проверь вручную в Фазе 5: node -e \"require('./src/index.js')\""
 fi
 
 # Quick test command?

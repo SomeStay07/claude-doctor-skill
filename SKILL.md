@@ -2,7 +2,7 @@
 name: doctor
 description: |
   Audits any project for security, test coverage, and Claude Code automation.
-  42 checks across 6 layers: secrets, CLAUDE.md, hooks, skills, agents, rules, MCP, CI, memory.
+  46 checks across 6 layers: secrets, CLAUDE.md, hooks, skills, agents, rules, MCP, CI, memory.
   Adaptive scoring — auto-detects project maturity (Starter/Growing/Mature/Pro).
   Diagnoses gaps, prescribes project-specific fixes, applies them.
 
@@ -106,7 +106,7 @@ API:           [напр. OpenAI, Stripe, S3]
 Профиль аудита: N чеков ([описание])
 ```
 
-Уровни: Starter 🌱 (17 чеков), Growing 🌿 (24), Mature 🌳 (30), Pro ⚡ (42)
+Уровни: Starter 🌱 (18 чеков), Growing 🌿 (27), Mature 🌳 (34), Pro ⚡ (46)
 
 ### Фазы 2+3: ДИАГНОСТИКА И РЕЦЕПТ
 
@@ -202,7 +202,7 @@ API:           [напр. OpenAI, Stripe, S3]
 
 1. Запусти Фазу 1 (изучение) — краткую версию
 2. Запусти Фазу 1.5 (определение зрелости) — полностью
-3. Проверь ТОЛЬКО `[core]` чеки (17 штук) — без подробных команд
+3. Проверь ТОЛЬКО `[core]` чеки (18 штук) — без подробных команд
 4. Выведи:
 
 <!-- Layers 3-4 (Intelligence, Context) have 0 [core] checks — not shown in quick mode -->
@@ -223,7 +223,7 @@ Core скор: 14/17 (82%)
 2. 🟠 [команда] — [почему]
 3. 🟡 [команда] — [почему]
 
-→ /doctor для полного аудита (42 чека)
+→ /doctor для полного аудита (46 чеков)
 ```
 
 **НЕ выводи**: подробные чеклисты, исправления, ссылки. Только скор + ТОП-3.

@@ -43,7 +43,7 @@ fi
 
 # Suggest MCP servers based on stack:
 echo "=== Рекомендации ==="
-src_dirs=$(for d in bot src app lib; do [ -d "$d" ] && printf "%s " "$d"; done)
+src_dirs=$(for d in src app lib bot server backend api core pkg cmd internal services packages; do [ -d "$d" ] && printf "%s " "$d"; done)
 
 if [ -n "$src_dirs" ]; then
   # DB detection
@@ -197,10 +197,11 @@ fi
 ```bash
 echo "=== Файлы памяти ==="
 # Check user-level MEMORY.md (Claude Code auto-memory):
-project_dir=$(pwd)
-project_hash=$(echo "$project_dir" | tr '/' '-')
-user_memory="$HOME/.claude/projects/$project_hash/memory/MEMORY.md"
-if [ -f "$user_memory" ]; then
+user_memory=""
+if [ -d "$HOME/.claude/projects" ]; then
+  user_memory=$(find "$HOME/.claude/projects" -path "*/memory/MEMORY.md" -type f 2>/dev/null | head -1)
+fi
+if [ -n "$user_memory" ]; then
   lines=$(wc -l < "$user_memory" | tr -d ' ')
   echo "  ✅ User MEMORY.md ($lines lines)"
   [ "$lines" -gt 200 ] && echo "     🟡 Длинный ($lines строк) — подрежь до 200, Claude видит только начало"

@@ -186,11 +186,11 @@ if [ -f .git/hooks/pre-commit ]; then
     echo "     ⚠️ Not a symlink — hook lives only in .git/ (not committable)"
   fi
   # Check what it does:
-  hook_file=$(readlink -f .git/hooks/pre-commit 2>/dev/null || echo .git/hooks/pre-commit)
+  hook_file=$(readlink .git/hooks/pre-commit 2>/dev/null || echo .git/hooks/pre-commit)
   if [ -f "$hook_file" ]; then
-    grep -q "py_compile\|tsc\|syntax" "$hook_file" 2>/dev/null && echo "     syntax check: ✅" || echo "     syntax check: ⚠️ missing"
-    grep -q "ruff\|eslint\|clippy\|lint" "$hook_file" 2>/dev/null && echo "     lint: ✅" || echo "     lint: ⚠️ missing"
-    grep -q "secret\|password\|token\|gitleaks" "$hook_file" 2>/dev/null && echo "     secrets scan: ✅" || echo "     secrets scan: ⚠️ missing"
+    grep -qE "py_compile|tsc|syntax" "$hook_file" 2>/dev/null && echo "     syntax check: ✅" || echo "     syntax check: ⚠️ missing"
+    grep -qE "ruff|eslint|clippy|lint" "$hook_file" 2>/dev/null && echo "     lint: ✅" || echo "     lint: ⚠️ missing"
+    grep -qE "secret|password|token|gitleaks" "$hook_file" 2>/dev/null && echo "     secrets scan: ✅" || echo "     secrets scan: ⚠️ missing"
     grep -q "git diff --cached" "$hook_file" 2>/dev/null && echo "     staged only: ✅" || echo "     staged only: ⚠️ checks all files (slow)"
   fi
 else
@@ -287,7 +287,7 @@ echo "=== Error handling ==="
 # Python — bare except:
 if [ -f requirements.txt ] || [ -f pyproject.toml ]; then
   src_dirs=""
-  for d in bot src app lib; do [ -d "$d" ] && src_dirs="$src_dirs $d"; done
+  for d in src app lib bot server backend api core pkg cmd internal services packages; do [ -d "$d" ] && src_dirs="$src_dirs $d"; done
   if [ -n "$src_dirs" ]; then
     bare_all=$(grep -rn "^[[:space:]]*except:" --include="*.py" "$src_dirs" 2>/dev/null)
     bare_count=$(echo "$bare_all" | grep -v "^$" | wc -l | tr -d ' ')
@@ -312,9 +312,11 @@ fi
 # Node.js — empty catch:
 if [ -f package.json ]; then
   src_dirs=""
-  for d in src app lib; do [ -d "$d" ] && src_dirs="$src_dirs $d"; done
+  for d in src app lib bot server backend api core pkg cmd internal services packages; do [ -d "$d" ] && src_dirs="$src_dirs $d"; done
   if [ -n "$src_dirs" ]; then
-    empty_catch=$(grep -rn "catch.*{}" --include="*.ts" --include="*.js" "$src_dirs" 2>/dev/null | wc -l | tr -d ' ')
+    empty_single=$(grep -rn "catch.*{}" --include="*.ts" --include="*.js" $src_dirs 2>/dev/null | wc -l | tr -d ' ')
+    empty_multi=$(grep -rn -A1 "catch.*{$" --include="*.ts" --include="*.js" $src_dirs 2>/dev/null | grep -B1 "^[[:space:]]*}$" | grep -c "catch" || echo 0)
+    empty_catch=$((empty_single + empty_multi))
     [ "$empty_catch" -gt 0 ] && echo "  🟠 $empty_catch empty catch blocks (ошибки проглатываются)" || echo "  ✅ No empty catch blocks"
   fi
 fi
@@ -350,7 +352,7 @@ if [ -f .git/hooks/pre-push ]; then
   else
     echo "     executable: ❌ (chmod +x needed)"
   fi
-  hook_file=$(readlink -f .git/hooks/pre-push 2>/dev/null || echo .git/hooks/pre-push)
+  hook_file=$(readlink .git/hooks/pre-push 2>/dev/null || echo .git/hooks/pre-push)
   if [ -f "$hook_file" ]; then
     grep -qiE "pytest|npm test|cargo test|go test|test" "$hook_file" 2>/dev/null && echo "     tests: ✅" || echo "     tests: ⚠️ no test command found"
     grep -qiE "ruff|eslint|lint" "$hook_file" 2>/dev/null && echo "     lint gate: ✅" || echo "     lint gate: ⚠️ missing"

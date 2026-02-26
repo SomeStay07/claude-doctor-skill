@@ -23,8 +23,8 @@
 [[ -f CLAUDE.md ]] && echo "✅ EXISTS: $(wc -l < CLAUDE.md) lines" || echo "❌ MISSING"
 
 # Проверить ключевые разделы (без учёта регистра):
-for section in "quick start\|getting started" "architecture\|structure" "critical\|rules\|must follow" "known issues\|troubleshoot"; do
-  grep -qi "$section" CLAUDE.md 2>/dev/null && echo "✅ Has: $section" || echo "⚠️ Missing section: $section"
+for section in "quick start|getting started" "architecture|structure" "critical|rules|must follow" "known issues|troubleshoot"; do
+  grep -qiE "$section" CLAUDE.md 2>/dev/null && echo "✅ Has: $section" || echo "⚠️ Missing section: $section"
 done
 
 # Проверить наличие блоков кода (готовых к копированию):
@@ -121,7 +121,7 @@ fi
 
 if [ "$manifest_found" = false ]; then
   src_dirs=""
-  for d in bot src app lib Sources; do
+  for d in src app lib bot server backend api core pkg cmd internal services packages Sources; do
     [ -d "$d" ] && src_dirs="$src_dirs $d"
   done
   if [ -n "$src_dirs" ]; then
@@ -395,3 +395,5 @@ fi
 **CLAUDE.md НЕ заменяет README**. Новый контрибьютор не будет читать CLAUDE.md чтобы понять что проект делает.
 
 > https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes
+
+> Продвинутые проверки (1g миграции БД) → [FOUNDATION-EXTRA.md](FOUNDATION-EXTRA.md)

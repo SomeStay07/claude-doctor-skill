@@ -47,6 +47,13 @@ if [ -d "$agents_dir" ]; then
     fi
     if [ -n "$model" ]; then
       echo "     model: $model"
+    else
+      # Read-only агент без model: рекомендовать haiku
+      if echo "$tools" | grep -qiE "^(Read|Grep|Glob|Bash)" 2>/dev/null; then
+        if ! echo "$tools" | grep -qiE "Edit|Write" 2>/dev/null; then
+          echo "     💡 Read-only агент — добавь model: haiku для экономии токенов"
+        fi
+      fi
     fi
   done
 
@@ -140,7 +147,7 @@ if [ -d "$rules_dir" ]; then
 
   # Поиск директорий исходного кода (не захардкожено):
   src_dirs=""
-  for d in bot src app lib; do
+  for d in src app lib bot server backend api core pkg cmd internal services packages; do
     if [ -d "$d" ]; then
       if [ -z "$src_dirs" ]; then
         src_dirs="$d"
