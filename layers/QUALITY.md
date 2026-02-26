@@ -245,32 +245,15 @@ done
 ```bash
 echo "=== CI/CD ==="
 ci_found=false
-# GitHub Actions? (use find to avoid zsh glob errors)
 for f in $(find .github/workflows -name '*.yml' -o -name '*.yaml' 2>/dev/null); do
-  if [ -f "$f" ]; then
-    ci_found=true
-    name=$(basename "$f")
-    echo "  ✅ $name"
-    # Check structure:
-    if grep -q "needs:" "$f" 2>/dev/null; then
-      echo "     stages: ✅ (has dependencies)"
-    else
-      echo "     stages: ⚠️ no 'needs:' — jobs run in parallel (lint should be first)"
-    fi
-    # Check for dummy env:
-    if grep -qE 'fake|dummy|""' "$f" 2>/dev/null; then
-      echo "     dummy env: ✅"
-    fi
-  fi
-done
-# GitLab CI?
-if [ -f .gitlab-ci.yml ]; then
+  [ -f "$f" ] || continue
   ci_found=true
-  echo "  ✅ .gitlab-ci.yml"
-fi
-if [ "$ci_found" = false ]; then
-  echo "  🔵 No CI workflow (опционально для соло-проектов)"
-fi
+  echo "  ✅ $(basename "$f")"
+  grep -q "needs:" "$f" 2>/dev/null && echo "     stages: ✅" || echo "     stages: ⚠️ no 'needs:' (lint should be first)"
+  grep -qE 'fake|dummy|""' "$f" 2>/dev/null && echo "     dummy env: ✅"
+done
+[ -f .gitlab-ci.yml ] && { ci_found=true; echo "  ✅ .gitlab-ci.yml"; }
+[ "$ci_found" = false ] && echo "  🔵 No CI workflow (опционально для соло-проектов)"
 ```
 
 ### Нужен ли CI?
@@ -304,53 +287,35 @@ echo "=== Error handling ==="
 # Python — bare except:
 if [ -f requirements.txt ] || [ -f pyproject.toml ]; then
   src_dirs=""
-  for d in bot src app lib; do
-    [ -d "$d" ] && src_dirs="$src_dirs $d"
-  done
+  for d in bot src app lib; do [ -d "$d" ] && src_dirs="$src_dirs $d"; done
   if [ -n "$src_dirs" ]; then
-    bare=$(grep -rn "except:" --include="*.py" $src_dirs 2>/dev/null | grep -v "except:" | grep -v "#" | wc -l | tr -d ' ')
     bare_all=$(grep -rn "^[[:space:]]*except:" --include="*.py" $src_dirs 2>/dev/null)
     bare_count=$(echo "$bare_all" | grep -v "^$" | wc -l | tr -d ' ')
     if [ "$bare_count" -gt 0 ]; then
-      echo "  🟠 $bare_count bare 'except:' statements (проглатывают ВСЕ ошибки):"
-      echo "$bare_all" | head -5 | while read -r line; do
-        echo "     $line"
-      done
+      echo "  🟠 $bare_count bare 'except:' (проглатывают ВСЕ ошибки):"
+      echo "$bare_all" | head -5 | sed 's/^/     /'
       echo "     → Используй 'except SpecificError:' или минимум 'except Exception:'"
     else
       echo "  ✅ No bare except statements"
     fi
-
-    # Check for except + pass (silent swallow):
     pass_count=$(grep -rn -A1 "except" --include="*.py" $src_dirs 2>/dev/null | grep -c "pass" | tr -d ' ')
-    if [ "$pass_count" -gt 3 ]; then
-      echo "  ⚠️ $pass_count 'except ... pass' blocks — ошибки проглатываются молча"
-    fi
+    [ "$pass_count" -gt 3 ] && echo "  ⚠️ $pass_count 'except ... pass' blocks — ошибки проглатываются молча"
   fi
-
-  # Check ruff E722 rule:
+  # Check ruff E722:
   if [ -f ruff.toml ] || [ -f pyproject.toml ]; then
-    if grep -qE 'E722|"E"' ruff.toml pyproject.toml 2>/dev/null; then
-      echo "  ✅ ruff E722 (bare-except) enabled"
-    else
-      echo "  ⚠️ ruff E722 not explicitly enabled (may use defaults)"
-    fi
+    grep -qE 'E722|"E"' ruff.toml pyproject.toml 2>/dev/null \
+      && echo "  ✅ ruff E722 (bare-except) enabled" \
+      || echo "  ⚠️ ruff E722 not explicitly enabled (may use defaults)"
   fi
 fi
 
 # Node.js — empty catch:
 if [ -f package.json ]; then
   src_dirs=""
-  for d in src app lib; do
-    [ -d "$d" ] && src_dirs="$src_dirs $d"
-  done
+  for d in src app lib; do [ -d "$d" ] && src_dirs="$src_dirs $d"; done
   if [ -n "$src_dirs" ]; then
     empty_catch=$(grep -rn "catch.*{}" --include="*.ts" --include="*.js" $src_dirs 2>/dev/null | wc -l | tr -d ' ')
-    if [ "$empty_catch" -gt 0 ]; then
-      echo "  🟠 $empty_catch empty catch blocks (ошибки проглатываются)"
-    else
-      echo "  ✅ No empty catch blocks"
-    fi
+    [ "$empty_catch" -gt 0 ] && echo "  🟠 $empty_catch empty catch blocks (ошибки проглатываются)" || echo "  ✅ No empty catch blocks"
   fi
 fi
 ```
@@ -407,141 +372,18 @@ else
 fi
 ```
 
-### Шаблон правильного pre-push hook
+### Шаблон pre-push hook
 
 ```bash
 #!/bin/bash
-# scripts/pre-push.sh — тесты перед пушем
-echo "🧪 Running tests before push..."
-
-# Quick gate: lint first (fast fail)
-if command -v ruff &>/dev/null; then
-  ruff check . --no-fix || { echo "❌ Lint failed — fix before pushing"; exit 1; }
-fi
-
-# Full test suite
-python -m pytest tests/ -q --tb=short || { echo "❌ Tests failed — fix before pushing"; exit 1; }
-
-echo "✅ All checks passed — pushing"
+# scripts/pre-push.sh — lint + тесты перед пушем
+ruff check . --no-fix || { echo "❌ Lint failed"; exit 1; }
+python -m pytest tests/ -q --tb=short || { echo "❌ Tests failed"; exit 1; }
+echo "✅ All checks passed"
 ```
 
 **Установка**: `ln -sf ../../scripts/pre-push.sh .git/hooks/pre-push && chmod +x scripts/pre-push.sh`
 
 ---
 
-## 2g. Branch protection — PR workflow [advanced]
-
-Прямой push в main — это рецепт катастрофы. Один сломанный коммит = сломанный production. Решение: **branch protection** — мерж только через Pull Request.
-
-- [ ] **Ветка по умолчанию защищена** — прямой push в main/master запрещён
-- [ ] **PR обязателен** — мерж только через Pull Request
-- [ ] **Status checks обязательны** — CI должен пройти перед мержем (если CI настроен)
-- [ ] **Именование веток** — feature branches по конвенции (`feature/`, `fix/`, `chore/`)
-
-### Команды проверки
-
-```bash
-echo "=== Branch protection ==="
-
-# Check current branch:
-branch=$(git branch --show-current 2>/dev/null)
-echo "  Current branch: $branch"
-
-# Check if there's a branching pattern:
-branch_count=$(git branch -a 2>/dev/null | wc -l | tr -d ' ')
-if [ "$branch_count" -le 1 ]; then
-  echo "  ⚠️ Only 1 branch — всё коммитится прямо в main"
-  echo "     → git checkout -b feature/my-change (работай в feature ветке)"
-else
-  echo "  ✅ $branch_count branches exist"
-  # Check naming convention:
-  good_names=$(git branch -a 2>/dev/null | grep -cE 'feature/|fix/|chore/|hotfix/|release/' || echo 0)
-  if [ "$good_names" -gt 0 ]; then
-    echo "  ✅ Branch naming convention detected ($good_names named branches)"
-  fi
-fi
-
-# Check GitHub branch protection (requires gh CLI):
-if command -v gh &>/dev/null; then
-  default_branch=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
-  if [ -z "$default_branch" ]; then
-    default_branch="main"
-  fi
-  protection=$(gh api "repos/{owner}/{repo}/branches/$default_branch/protection" 2>/dev/null)
-  if [ $? -eq 0 ]; then
-    echo "  ✅ Branch protection enabled on $default_branch"
-    echo "$protection" | python3 -c "
-import json, sys
-d = json.load(sys.stdin)
-pr = d.get('required_pull_request_reviews', {})
-if pr:
-  print('     PR reviews required: ✅')
-else:
-  print('     PR reviews: ⚠️ not required')
-checks = d.get('required_status_checks', {})
-if checks:
-  print('     Status checks required: ✅')
-else:
-  print('     Status checks: ⚠️ not required')
-" 2>/dev/null
-  else
-    echo "  ⚠️ No branch protection on $default_branch"
-    echo "     → GitHub: Settings → Branches → Add rule → Require PR + status checks"
-  fi
-else
-  echo "  🔵 gh CLI not available — check branch protection manually in GitHub Settings"
-fi
-```
-
-### Workflow по уровню зрелости
-
-| Уровень | Workflow | Для кого |
-|---------|---------|----------|
-| **Начинающий** | main + pre-push hook | Соло, учебные проекты |
-| **Средний** | main + feature branches + PR | Соло с production |
-| **Продвинутый** | main + develop + feature + PR + CI checks | Команда, open-source |
-
-**Минимум для вайбкодера**: feature branch → PR → merge. Это создаёт точку отката и историю изменений.
-
-```bash
-# Простой flow для начинающих:
-git checkout -b feature/add-login    # Создай ветку
-# ... работай с AI ...
-git add -A && git commit -m "Add login feature"
-git push -u origin feature/add-login
-gh pr create --fill                   # Создай PR
-# → Посмотри diff в GitHub, убедись что всё ОК
-gh pr merge                           # Мерж в main
-```
-
-> https://quesma.com/blog/vibe-code-git-blame/
-> https://jxnl.co/writing/2025/03/18/version-control-for-the-vibe-coder-part-1/
-
----
-
-## Связь между уровнями защиты
-
-```
-Уровень              Что ловит                    Скорость     Обход           Блокирует?
-────────────────────────────────────────────────────────────────────────────────────────
-PostToolUse          Syntax + format               ~100ms       Нельзя          Нет (feedback)
-Pre-commit           Lint + secrets + debug         ~3 sec       --no-verify     Да (commit не создаётся)
-Pre-push             Tests + lint                   ~30 sec      --no-verify     Да (push не проходит)
-Branch protection    PR review + CI checks          ~3 min       Admin bypass    Да (merge блокирован)
-CI (опционально)     Full test suite + lint         ~3 min       Force push      Да (PR не мержится)
-```
-
-**PostToolUse — самый ценный**: работает при КАЖДОМ Edit/Write Claude, ловит ошибки мгновенно. Не блокирует запись (файл уже изменён), но Claude видит ошибку через stderr и исправляет в следующем действии. На практике это работает как автокоррекция.
-
-**Pre-commit — второй барьер**: ловит то, что PostToolUse не проверяет (lint правила, секреты в diff, debug prints). Реально блокирует — commit не создаётся при ошибке. Обходится через `--no-verify`, но это осознанное решение.
-
-**CI — страховка**: для команд и open-source. Для соло — приятный бонус, не обязательный. Единственная защита от `--no-verify`.
-
-### Ограничения pre-commit
-
-- `--no-verify` обходит ВСЕ хуки (pre-commit + pre-push) — единственная защита от этого — CI
-- Secrets scan через grep имеет false negatives (Base64-encoded, split across lines) — для серьёзной защиты нужен gitleaks
-- Хуки живут в `.git/hooks/` — не коммитятся, нужен symlink на `scripts/pre-commit.sh`
-
----
-Дополнительные проверки: [QUALITY-EXTRA.md](QUALITY-EXTRA.md)
+> Продвинутые проверки (2g branch protection, 2h type checking, 2i coverage, 2j print/logging, 2k PreToolUse) + обзор уровней защиты → [QUALITY-EXTRA.md](QUALITY-EXTRA.md)
