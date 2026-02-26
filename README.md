@@ -53,7 +53,7 @@ Every finding is **project-specific** (not a template) and explains **WHY** it m
 
 <div align="center">
 <br>
-<img src="assets/demo-scan.gif" alt="doctor scan demo — diagnosing project health" width="800">
+<img src="assets/demo-scan.svg" alt="doctor scan demo — diagnosing project health" width="800">
 <br>
 <sub>Phase 1-2: Study your project, run 46 checks, score each layer</sub>
 <br><br>
@@ -63,7 +63,7 @@ Every finding is **project-specific** (not a template) and explains **WHY** it m
 
 <div align="center">
 <br>
-<img src="assets/demo-fix.gif" alt="doctor fix demo — applying fixes" width="800">
+<img src="assets/demo-fix.svg" alt="doctor fix demo — applying fixes" width="800">
 <br>
 <sub>Phase 3-4: Severity-tagged findings with one-click fixes, then verification</sub>
 <br><br>
@@ -366,8 +366,8 @@ claude-doctor-skill/
 |   +-- MATURITY.md        -- Adaptive scoring: maturity detection + weights
 +-- assets/
 |   +-- logo.svg         -- Doctor logo
-|   +-- demo-scan.gif    -- Animated demo: /doctor scan
-|   +-- demo-fix.gif     -- Animated demo: /doctor fix
+|   +-- demo-scan.svg    -- Animated demo: /doctor scan
+|   +-- demo-fix.svg     -- Animated demo: /doctor fix
 +-- install.sh         -- One-line installer with verification
 +-- LICENSE
 ```
